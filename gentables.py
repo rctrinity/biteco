@@ -224,7 +224,7 @@ def generateTable() -> Table:
     )
     tblBestBlock.add_row(
         Text(f"{'Difficulty'}"),
-        Text(f"{bestBlockHeader.difficulty/TRILLION:.2f}T"),
+        Text(f"{bestBlockHeader.difficulty/TRILLION:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"),
     )
     tblBestBlock.add_row(
         Text(f"{'Target in nBits'}"),
