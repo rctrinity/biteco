@@ -30,7 +30,7 @@ def generateLayout() -> Panel:
     layout["network"].update(tblNetwork)
     layout["metricevents"].update(tblMetricEvents)
     
-    layout["market"].size = 7
+    layout["market"].size = 6
     layout["gold"].size = 5
     layout["supply"].size = 7
     layout["mining"].size = 5
@@ -133,8 +133,8 @@ def generateTable() -> Table:
     
     ####### Table creation below ##########################################################################
     #Market
-    tblMarket = Table(title_justify='left', show_header=True, min_width = 45, show_footer=False, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
-    tblMarket.add_column("Market", style='bright_black')
+    tblMarket = Table(title_justify='left', title=' Market', show_header=False, min_width = 45, show_footer=False, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
+    tblMarket.add_column("", style='bright_black')
     tblMarket.add_column("", justify='right', style='bright_white')
     if int(round(BTCPrice)) > int(round(PrevBTCPrice)):
         tblMarket.add_row(
