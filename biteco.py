@@ -36,12 +36,14 @@ def main():
     try:        
         with Live(Align.center(generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
-                sleep(60*0.05)  # 5 Minutes has been solid. If adjusted lower, the getnetowrkinfo RPC call tends to give connection problems.
-                live_table.update(Align.center(generateLayout(), vertical="middle"), refresh=True)
+                try:
+                    sleep(60*0.02) 
+                    live_table.update(Align.center(generateLayout(), vertical="middle"), refresh=True)
+                except KeyboardInterrupt:
+                    raise
 
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         print(f"{'Shutting down: Keyboard Interrupt.'}")
-        sys.exit()  
 
 if __name__ == '__main__':
     main()    
