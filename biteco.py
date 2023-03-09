@@ -24,17 +24,19 @@ from time import sleep
 from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
+from rich import print, pretty
 from gentables import generateLayout
 from util import clear
 
           
 def main():
     clear() 
+    print("[bright_black]Initializing dashboard[white]...")
     
     try:        
         with Live(Align.center(generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
-                sleep(300)  # 5 Minutes has been solid. If adjusted lower, the getnetowrkinfo RPC call tends to give connection problems.
+                sleep(60*0.05)  # 5 Minutes has been solid. If adjusted lower, the getnetowrkinfo RPC call tends to give connection problems.
                 live_table.update(Align.center(generateLayout(), vertical="middle"), refresh=True)
 
     except KeyboardInterrupt:
