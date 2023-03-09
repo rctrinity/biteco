@@ -10,6 +10,8 @@ import datetime, time
 import math
 from util import GetAssetPrices, BlockSubsidy, marketCapitalization, PrevBTCPrice, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION
 
+INITIALIZE = False
+
 def generateLayout() -> Panel:
     tblMarket, tblGold, tblSupply, tblMining, tblBestBlock, tblNetwork, tblMetricEvents = generateTable()
     layout = Layout()
@@ -42,7 +44,7 @@ def generateLayout() -> Panel:
 
 def generateTable() -> Table:
     # Initialize variables ###############################################################################
-    global PrevBTCPrice
+    global PrevBTCPrice, INITIALIZE
     nTargetTimespan = 14 * 24 * 60 * 60                     # two weeks - 1,209,600
     nTargetSpacing = 10 * 60                                # 1 Hour 600
     nSecsHour = 60 * 60                                     # 3600 
@@ -51,16 +53,24 @@ def generateTable() -> Table:
     if PrevBTCPrice == None:
         PrevBTCPrice = 0      
     
+    if not INITIALIZE:
+        brk = 0.1
+        INITIALIZE = True
+    else:
+        brk = 0.2
+    
     proxy = rpc.Proxy()
     # End initialization #################################################################################
 
     
     # Collect tx metrics #################################################################################
-    currentInfo = proxy.call('gettxoutsetinfo', 'muhash')              
+    currentInfo = proxy.call('gettxoutsetinfo', 'muhash')  
+    sleep(brk)
     UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
     coinsMined = float(currentInfo['total_amount'])                # Excludes unspendable
     totalTXs = currentInfo['txouts']    
-    chainTxStats = proxy.call('getchaintxstats')            
+    chainTxStats = proxy.call('getchaintxstats')   
+    sleep(brk)
     totalTXs = chainTxStats['txcount']
     # Last 30 days
     txRatePerSec = chainTxStats['txrate']
@@ -70,13 +80,16 @@ def generateTable() -> Table:
     
     # Collect chain / network info / Market Cap ##########################################################
     getBlockChainInfo = proxy.call('getblockchaininfo')   
+    sleep(brk)
     chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
     MAX_HEIGHT = getBlockChainInfo['blocks']
     satusd, blockSubsidyValue, MarketCap, BTCvsGOLDMarketCap, BTCPricedInGold, PctIssued, IssuanceRemaining, BTCPrice = marketCapitalization(coinsMined, BlockSubsidy(MAX_HEIGHT), UNSPENDABLE)
     if PrevBTCPrice == 0 and BTCPrice != 0:
         PrevBTCPrice = BTCPrice     
-    getNetworkInfo = proxy.call('getnetworkinfo')   
+    getNetworkInfo = proxy.call('getnetworkinfo')  
+    sleep(brk)
     bestBlockHeader = proxy.getblockheader(proxy.getbestblockhash())
+    sleep(brk)
     bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(bestBlockHeader.nTime).timetuple())
     bestBlockAge = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - bestBlockTimeUnix, 0)))).lstrip("0:")
     # End chain / network info ###########################################################################
@@ -86,11 +99,13 @@ def generateTable() -> Table:
     # Calculate average block time for past rolling 2016 blocks
     start_2016_block = int(1 + (MAX_HEIGHT - nInterval))
     blockHead = proxy.getblockheader(proxy.getblockhash(start_2016_block))   
+    sleep(brk)
     avg_2016_blockTime = str(datetime.timedelta(seconds=(round( (bestBlockTimeUnix - blockHead.nTime) / nInterval,0)))).lstrip("0:")
 
     # Calculate average block time in current diff. epoch
     epochStartBlock = int(MAX_HEIGHT - (MAX_HEIGHT % nInterval))
     epochHead = proxy.getblockheader(proxy.getblockhash(epochStartBlock))   
+    sleep(brk)
     avgEpochBlockTime = str(datetime.timedelta(seconds=(round( (bestBlockHeader.nTime - epochHead.nTime) / int(MAX_HEIGHT % nInterval),0)))).lstrip("0:")
      # End epoch / 2016 calculations ######################################################################
      
@@ -125,9 +140,13 @@ def generateTable() -> Table:
     
     # Collext hash rates, different intervals #############################################################
     getNtwrkHashps = proxy.call('getnetworkhashps',-1)                      # Since last retarget
+    sleep(brk)
     get7DNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) >> 1)  # 1 Week
+    sleep(brk)
     get4WNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) << 1)  # 4 weeks
+    sleep(brk)
     get1DNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) // 14) # 1 day
+    sleep(brk)
     # End hash rate collection ############################################################################
               
     
@@ -139,17 +158,17 @@ def generateTable() -> Table:
     if int(round(BTCPrice)) > int(round(PrevBTCPrice)):
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}↑"),  
+        Text(f"${BTCPrice:,.0f}", style='dim bold green'),
         )
     elif int(round(BTCPrice)) < int(round(PrevBTCPrice)):
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}↓"),  
+        Text(f"${BTCPrice:,.0f}", style='dim bold red')
         )
     else:
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}"),  
+        Text(f"${BTCPrice:,.0f}", style='bright_white')
         )
     
     PrevBTCPrice = BTCPrice
