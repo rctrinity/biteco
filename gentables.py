@@ -86,8 +86,14 @@ class generateDataForTables(object):
         self.GLDPrice = getAssetPrices.getGLDUSD()
         if self.GLDPrice == None:
             self.GLDPrice = 0
-        self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
-        self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
+        try:
+            self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
+        except:
+            self.BTCPricedInGold =0
+        try:
+            self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
+        except:
+            self.BTCvsGOLDMarketCap = 0
         self.totalTXs = currentInfo['txouts']         
         chainTxStats = self.proxy.call('getchaintxstats')  
         self.totalTXs = chainTxStats['txcount']
@@ -112,10 +118,10 @@ class generateDataForTables(object):
         self.halvingDate = self.HalvingDate() 
         self.PctIssued = ((self.coinsMined + self.UNSPENDABLE) / MAX_SUPPLY) * 100
         self.IssuanceRemaining = MAX_SUPPLY - self.coinsMined - self.UNSPENDABLE
-        if self.BTCPrice == 0:
-            self.satusd = 0
-        else:
+        try:
             self.satusd = (1/(self.BTCPrice * CONVERT_TO_SATS))
+        except:
+            self.satusd = 0    
         self.MarketCap = self.marketCap()
         self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
         self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
