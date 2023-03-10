@@ -1,4 +1,4 @@
-# Generate tables for termonal dashboard
+# Generate data and tables for terminal dashboard
 from rich.table import Table
 from rich import box
 from rich.text import Text
@@ -9,10 +9,176 @@ from bitcoin.core.serialize import uint256_from_compact, compact_from_uint256
 import datetime, time
 from time import sleep
 import math
-from util import GetAssetPrices, BlockSubsidy, marketCapitalization, PrevBTCPrice, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION
+from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION
 
-INITIALIZE = False
 
+class generateDataForTables(object):
+    def __init__(self, 
+                 proxy=None, 
+                 nBlocksToHalving=0, 
+                 BTCPrice=0, 
+                 GLDPrice=0, 
+                 satusd=0, 
+                 MarketCap=0, 
+                 BTCPricedInGold=0, 
+                 BTCvsGOLDMarketCap=0, 
+                 coinsMined=0, 
+                 PctIssued=0,  
+                 UNSPENDABLE=0, 
+                 IssuanceRemaining=0, 
+                 BlockSubsidy=0, 
+                 blockSubsidyValue=0, 
+                 MAX_HEIGHT=0, 
+                 chainSize=0,
+                 bestNonce=0, 
+                 difficulty=0, 
+                 targetBits=0, 
+                 bestBlockAge=0, 
+                 Connections=0, 
+                 ConnectionsIn=0, 
+                 verification=0, 
+                 getNtwrkHashps=0, 
+                 get7DNtwrkHashps=0, 
+                 get4WNtwrkHashps=0, 
+                 get1DNtwrkHashps=0, 
+                 chainwork=0, 
+                 totalTXs=0, 
+                 txRatePerSec=0, 
+                 txCount=0, 
+                 diffEpoch=0, 
+                 avg_2016_blockTime=0, 
+                 avgEpochBlockTime=0, 
+                 epochBlocksRemain=0, 
+                 RetargetDate=None, 
+                 estDiffChange=0, 
+                 bnNew=0, 
+                 halvingDate=None, 
+                 subsidyEpoch=0, 
+                 BestBlockHash=0, 
+                 nTargetTimespan=0, 
+                 nTargetSpacing=0, 
+                 nSecsHour=0, 
+                 nBlocksHour=0, 
+                 nInterval=0, 
+                 EpochHead = 0, 
+                 bestBlockTimeUnix=0, 
+                 bestBlockHeader = None): 
+                 
+        self.proxy=rpc.Proxy()
+        self.nTargetTimespan = 14 * 24 * 60 * 60                     
+        self.nTargetSpacing = 10 * 60                                
+        self.nSecsHour = 60 * 60                                     
+        self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
+        self.nInterval = self.nTargetTimespan / self.nTargetSpacing                
+        self.bestBlockHash = self.proxy.getbestblockhash()
+        self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)   
+        self.bestNonce = self.bestBlockHeader.nNonce
+        self.difficulty = self.bestBlockHeader.difficulty/TRILLION
+        self.targetBits = self.bestBlockHeader.nBits
+        self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
+        currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
+        self.coinsMined = float(currentInfo['total_amount'])
+        self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
+        getAssetPrices = GetAssetPrices()
+        self.BTCPrice = getAssetPrices.getBTCUSD()
+        if self.BTCPrice == None:
+            self.BTCPrice = 0
+        self.GLDPrice = getAssetPrices.getGLDUSD()
+        if self.GLDPrice == None:
+            self.GLDPrice = 0
+        self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
+        self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
+        self.totalTXs = currentInfo['txouts']         
+        chainTxStats = self.proxy.call('getchaintxstats')  
+        self.totalTXs = chainTxStats['txcount']
+        self.txRatePerSec = chainTxStats['txrate']
+        self.txCount = chainTxStats['window_tx_count']        
+        getBlockChainInfo = self.proxy.call('getblockchaininfo') 
+        self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
+        self.MAX_HEIGHT = getBlockChainInfo['blocks']
+        self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
+        self.verification = getBlockChainInfo['verificationprogress'] * 100        
+        self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
+        self.BlockSubsidy = blockSubsidy(self.MAX_HEIGHT)
+        self.blockSubsidyValue = self.BlockSubsidy * self.BTCPrice
+        self.subsidyEpoch = 1 +(self.MAX_HEIGHT // HALVING_BLOCKS)        
+        getNetworkInfo = self.proxy.call('getnetworkinfo') 
+        self.Connections = getNetworkInfo['connections'] 
+        self.ConnectionsIn = getNetworkInfo['connections_in']                      
+        self.BestBlockAge = self.bestBlockAge()    
+        self.avg_2016_blockTime = self.AvgBlockTimePrevEpoch()
+        self.avgEpochBlockTime, self.EpochHead = self.AvgBlockTimeEpoch()       
+        self.nBlocksToHalving = self.blocksToHalving()
+        self.halvingDate = self.HalvingDate() 
+        self.PctIssued = ((self.coinsMined + self.UNSPENDABLE) / MAX_SUPPLY) * 100
+        self.IssuanceRemaining = MAX_SUPPLY - self.coinsMined - self.UNSPENDABLE
+        if self.BTCPrice == 0:
+            self.satusd = 0
+        else:
+            self.satusd = (1/(self.BTCPrice * CONVERT_TO_SATS))
+        self.MarketCap = self.marketCap()
+        self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
+        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
+        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) << 1) / EXAHASH    
+        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) // 14) / EXAHASH 
+        self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
+        
+    
+    def marketCap(self) -> float:
+        return ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
+    
+    def blocksToHalving(self) -> int:
+        return int(HALVING_BLOCKS - (self.MAX_HEIGHT % HALVING_BLOCKS))
+        
+    def AvgBlockTimePrevEpoch(self) -> str:
+        start_2016_block = int((self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval)) - self.nInterval)
+        end_2016_block = int((self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))-1)
+        startBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(start_2016_block))
+        endBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(end_2016_block)) 
+        
+        return str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
+        
+    
+    def AvgBlockTimeEpoch(self) -> str:
+        epochStartBlock = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
+        epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock))  
+        
+        return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
+    
+    
+    def bestBlockAge(self) -> str:
+        r = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
+        return r
+        
+    def Retarget(self):
+        nEpochTargetTimespan = int(( self.MAX_HEIGHT % self.nInterval ) * self.nTargetSpacing)
+        nEpochActualTimespan = int(self.bestBlockHeader.nTime - self.EpochHead.nTime)
+
+        if (nEpochActualTimespan < nEpochTargetTimespan/4):
+            nEpochActualTimespan = nEpochTargetTimespan/4
+        if (nEpochActualTimespan > nEpochTargetTimespan*4):
+            nEpochActualTimespan = nEpochTargetTimespan*4
+    
+        bnnew = uint256_from_compact(self.bestBlockHeader.nBits)
+        bnnew *= nEpochActualTimespan
+        bnnew //= nEpochTargetTimespan
+        bnnew = compact_from_uint256(bnnew)
+     
+        diffchange = (1-(nEpochActualTimespan / nEpochTargetTimespan)) * 100
+        blocksremain = int(self.nInterval - (self.MAX_HEIGHT % self.nInterval))
+        secsToAdd = (blocksremain  / self.nBlocksHour) * self.nSecsHour
+        retargetdate = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
+        
+        return diffchange, blocksremain, retargetdate, bnnew
+        
+        
+    def HalvingDate(self) -> str:
+        secsToAdd = (self.nBlocksToHalving / self.nBlocksHour) * self.nSecsHour
+        
+        return datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
+        
+
+    
 def generateLayout() -> Panel:
     tblMarket, tblGold, tblSupply, tblMining, tblBestBlock, tblNetwork, tblMetricEvents = generateTable()
     layout = Layout()
@@ -41,158 +207,60 @@ def generateLayout() -> Panel:
     layout["network"].size = 14
     layout["metricevents"].size = 20
     
-    return Panel(layout, title=PACKAGE_NAME, box=box.SIMPLE,  expand=False, subtitle=None, width=50, height=65)
+    return Panel(layout, title=PACKAGE_NAME, box=box.SIMPLE,  expand=False, subtitle=None, width=50, height=65, border_style='white')  
+
 
 def generateTable() -> Table:
-    # Initialize variables ###############################################################################
-    global PrevBTCPrice, INITIALIZE
-    nTargetTimespan = 14 * 24 * 60 * 60                     # two weeks - 1,209,600
-    nTargetSpacing = 10 * 60                                # 1 Hour 600
-    nSecsHour = 60 * 60                                     # 3600 
-    nBlocksHour = (nSecsHour / nTargetSpacing)              # 6 blocks
-    nInterval = nTargetTimespan / nTargetSpacing            # 2,016 blocks
+    global PrevBTCPrice
+    
+    tblData = generateDataForTables()   
+    
     if PrevBTCPrice == None:
-        PrevBTCPrice = 0      
+        PrevBTCPrice = tblData.BTCPrice      
     
-    if not INITIALIZE:
-        brk = 0.1
-        INITIALIZE = True
-    else:
-        brk = 0.2
-    
-    proxy = rpc.Proxy()
-    # End initialization #################################################################################
 
-    
-    # Collect tx metrics #################################################################################
-    currentInfo = proxy.call('gettxoutsetinfo', 'muhash')  
-    sleep(brk)
-    UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
-    coinsMined = float(currentInfo['total_amount'])                # Excludes unspendable
-    totalTXs = currentInfo['txouts']    
-    chainTxStats = proxy.call('getchaintxstats')   
-    sleep(brk)
-    totalTXs = chainTxStats['txcount']
-    # Last 30 days
-    txRatePerSec = chainTxStats['txrate']
-    txCount = chainTxStats['window_tx_count']
-    # End tx metrics #####################################################################################
-    
-    
-    # Collect chain / network info / Market Cap ##########################################################
-    getBlockChainInfo = proxy.call('getblockchaininfo')   
-    sleep(brk)
-    chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
-    MAX_HEIGHT = getBlockChainInfo['blocks']
-    satusd, blockSubsidyValue, MarketCap, BTCvsGOLDMarketCap, BTCPricedInGold, PctIssued, IssuanceRemaining, BTCPrice = marketCapitalization(coinsMined, BlockSubsidy(MAX_HEIGHT), UNSPENDABLE)
-    if PrevBTCPrice == 0 and BTCPrice != 0:
-        PrevBTCPrice = BTCPrice     
-    getNetworkInfo = proxy.call('getnetworkinfo')  
-    sleep(brk)
-    bestBlockHeader = proxy.getblockheader(proxy.getbestblockhash())
-    sleep(brk)
-    bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(bestBlockHeader.nTime).timetuple())
-    bestBlockAge = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - bestBlockTimeUnix, 0)))).lstrip("0:")
-    # End chain / network info ###########################################################################
-    
-    
-    # Epoch and rolling 2016 block calculations ##########################################################
-    # Calculate average block time for past rolling 2016 blocks
-    start_2016_block = int(1 + (MAX_HEIGHT - nInterval))
-    blockHead = proxy.getblockheader(proxy.getblockhash(start_2016_block))   
-    sleep(brk)
-    avg_2016_blockTime = str(datetime.timedelta(seconds=(round( (bestBlockTimeUnix - blockHead.nTime) / nInterval,0)))).lstrip("0:")
-
-    # Calculate average block time in current diff. epoch
-    epochStartBlock = int(MAX_HEIGHT - (MAX_HEIGHT % nInterval))
-    epochHead = proxy.getblockheader(proxy.getblockhash(epochStartBlock))   
-    sleep(brk)
-    avgEpochBlockTime = str(datetime.timedelta(seconds=(round( (bestBlockHeader.nTime - epochHead.nTime) / int(MAX_HEIGHT % nInterval),0)))).lstrip("0:")
-     # End epoch / 2016 calculations ######################################################################
-     
-
-    # Estimate retarget change pct. #######################################################################
-    nEpochTargetTimespan = int(( MAX_HEIGHT % nInterval ) * nTargetSpacing)
-    nEpochActualTimespan = int(bestBlockHeader.nTime - epochHead.nTime)
-
-    if (nEpochActualTimespan < nEpochTargetTimespan/4):
-        nEpochActualTimespan = nEpochTargetTimespan/4
-    if (nEpochActualTimespan > nEpochTargetTimespan*4):
-        nEpochActualTimespan = nEpochTargetTimespan*4
-    
-    bnNew = uint256_from_compact(bestBlockHeader.nBits)
-    bnNew *= nEpochActualTimespan
-    bnNew //= nEpochTargetTimespan
-    bnNew = compact_from_uint256(bnNew)
-     
-    estDiffChange = (1-(nEpochActualTimespan / nEpochTargetTimespan)) * 100
-    epochBlocksRemain = int(nInterval - (MAX_HEIGHT % nInterval))
-    secsToAdd = (epochBlocksRemain  / nBlocksHour) * nSecsHour
-    RetargetDate = datetime.datetime.fromtimestamp(bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
-    # End retarget estimations ############################################################################
-    
-    
-    # Calculate halving event #############################################################################
-    nBlocksToHalving = int(HALVING_BLOCKS - (MAX_HEIGHT % HALVING_BLOCKS))
-    secsToAdd = (nBlocksToHalving / nBlocksHour) * nSecsHour
-    halvingDate = datetime.datetime.fromtimestamp(bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
-    # End halving calculation #############################################################################
-    
-    
-    # Collext hash rates, different intervals #############################################################
-    getNtwrkHashps = proxy.call('getnetworkhashps',-1)                      # Since last retarget
-    sleep(brk)
-    get7DNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) >> 1)  # 1 Week
-    sleep(brk)
-    get4WNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) << 1)  # 4 weeks
-    sleep(brk)
-    get1DNtwrkHashps = proxy.call('getnetworkhashps', int(nInterval) // 14) # 1 day
-    sleep(brk)
-    # End hash rate collection ############################################################################
-              
-    
-    ####### Table creation below ##########################################################################
     #Market
     tblMarket = Table(title_justify='left', title=' Market', show_header=False, min_width = 45, show_footer=False, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
     tblMarket.add_column("", style='bright_black')
     tblMarket.add_column("", justify='right', style='bright_white')
-    if int(round(BTCPrice)) > int(round(PrevBTCPrice)):
+    if int(round(tblData.BTCPrice)) > int(round(PrevBTCPrice)):
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}", style='dim bold green'),
+        Text(f"${tblData.BTCPrice:,.0f}", style='dim bold green')
         )
-    elif int(round(BTCPrice)) < int(round(PrevBTCPrice)):
+    elif int(round(tblData.BTCPrice)) < int(round(PrevBTCPrice)):
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}", style='dim bold red')
+        Text(f"${tblData.BTCPrice:,.0f}", style='dim bold red')  
         )
     else:
         tblMarket.add_row(
         Text(f"{'Price'}"),
-        Text(f"${BTCPrice:,.0f}", style='bright_white')
+        Text(f"${tblData.BTCPrice:,.0f}", style='bright_white')
         )
     
-    PrevBTCPrice = BTCPrice
+    PrevBTCPrice = tblData.BTCPrice
     
     tblMarket.add_row(
         Text(f"{'Sats per Dollar'}"),
-        Text(f"{satusd:,.0f}"),
+        Text(f"{tblData.satusd:,.0f}"),
     )
     tblMarket.add_row(
         Text(f"{'Market Capitalization'}"),
-        Text(f"${MarketCap:.1f}B")
+        Text(f"${tblData.MarketCap:.1f}B")
     )
+    
     #Gold
     tblGold = Table(title=' Gold', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
     tblGold.add_column("", style='bright_black')
     tblGold.add_column("", justify='right', style='bright_white')
     tblGold.add_row(
         Text(f"{'Bitcoin priced in Gold'}"),
-        Text(f"{BTCPricedInGold:.1f} oz"),
+        Text(f"{tblData.BTCPricedInGold:.1f} oz"),
     )
     tblGold.add_row(
         Text(f"{'Bitcoin vs. Gold Market Cap'}"),
-        Text(f"{BTCvsGOLDMarketCap:.2f}%")
+        Text(f"{tblData.BTCvsGOLDMarketCap:.2f}%")
     )
     #Supply
     tblSupply = Table(title=' Supply', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
@@ -200,151 +268,158 @@ def generateTable() -> Table:
     tblSupply.add_column("", justify='right', style='bright_white')
     tblSupply.add_row(
         Text(f"{'Money Supply'}"),
-        Text(f"{coinsMined:,.2f}"),
+        Text(f"{tblData.coinsMined:,.2f}"),
     )
     tblSupply.add_row(
         Text(f"{'Percentage Issued'}"),
-        Text(f"{PctIssued:.2f}%"),
-    )
-    tblSupply.add_row(
-        Text(f"{'Issuance Remaining'}"),
-        Text(f"{IssuanceRemaining:,.2f}"),
+        Text(f"{tblData.PctIssued:.2f}%"),
     )
     tblSupply.add_row(
         Text(f"{'Unspendable'}"),
-        Text(f"{UNSPENDABLE:.2f}")
+        Text(f"{tblData.UNSPENDABLE:.2f}")
+   
     )
+    tblSupply.add_row(
+        Text(f"{'Issuance Remaining'}"),
+        Text(f"{tblData.IssuanceRemaining:,.2f}"),
+    )
+    
     # Mining Economics
     tblMining = Table(title=' Mining Economics', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
     tblMining.add_column("", style='bright_black')
     tblMining.add_column("", justify='right', style='bright_white')
     tblMining.add_row(
         Text(f"{'Block Subsidy'}"),
-        Text(f"{BlockSubsidy(MAX_HEIGHT):.2f} BTC"),
+        Text(f"{tblData.BlockSubsidy:.2f} BTC"),
     )
     tblMining.add_row(
         Text(f"{'Subsidy value'}"),
-        Text(f"${blockSubsidyValue:,.0f}")
+        Text(f"${tblData.blockSubsidyValue:,.0f}")
     )
+    
     #Best Block Summary
     tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
     tblBestBlock.add_column("", style='bright_black')
     tblBestBlock.add_column("", justify='right', style='bright_white')
     tblBestBlock.add_row(
         Text(f"{'Block Height'}"),
-        Text(f"{MAX_HEIGHT:,.0f}"),
+        Text(f"{tblData.MAX_HEIGHT:,.0f}"),
     )
     tblBestBlock.add_row(
         Text(f"{'Chain size'}"),
-        Text(f"{chainSize:.1f} GB"),
+        Text(f"{tblData.chainSize:.1f} GB"),
     )
     tblBestBlock.add_row(
         Text(f"{'nNonce'}"),
-        Text(f"{bestBlockHeader.nNonce:.0f}"),
+        Text(f"{tblData.bestNonce:.0f}"),
     )
     tblBestBlock.add_row(
         Text(f"{'Difficulty'}"),
-        Text(f"{bestBlockHeader.difficulty/TRILLION:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"),
+        Text(f"{tblData.difficulty:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"), 
     )
     tblBestBlock.add_row(
         Text(f"{'Target in nBits'}"),
-        Text(f"{bestBlockHeader.nBits}"),
+        Text(f"{tblData.targetBits}"),
     )
     tblBestBlock.add_row(
         Text(f"{'Time'}"),
-        Text(f"{bestBlockAge} ago")
+        Text(f"{tblData.BestBlockAge} ago")
     )
+    
     #Network Summary
     tblNetwork = Table(title=' Network Summary', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
     tblNetwork.add_column("", style='bright_black')
     tblNetwork.add_column("", justify='right', style='bright_white')
     tblNetwork.add_row(
         Text(f"{'Connections'}"),
-        Text(f"{getNetworkInfo['connections']}"),
+        Text(f"{tblData.Connections}"),
     )
     tblNetwork.add_row(
         Text(f"{'  Inbound'}"),
-        Text(f"{getNetworkInfo['connections_in']}"),
+        Text(f"{tblData.ConnectionsIn}"),
     )
+    
     tblNetwork.add_row(
         Text(f"{'Verification Progress'}"),
-        Text(f"{getBlockChainInfo['verificationprogress']*100:,.04f}%"),
+        Text(f"{tblData.verification:,.04f}%"),
     )
     tblNetwork.add_row(
         Text(f"{'Hash Rate, Epoch'}"),
-        Text(f"{getNtwrkHashps / EXAHASH:.1f} EH/s"),
+        Text(f"{tblData.getNtwrkHashps:.1f} EH/s"),
     )
     tblNetwork.add_row(
         Text(f"{'Hash Rate, 7-day'}"),
-        Text(f"{get7DNtwrkHashps / EXAHASH:.1f} EH/s"),
+        Text(f"{tblData.get7DNtwrkHashps:.1f} EH/s"),
     )
     tblNetwork.add_row(
         Text(f"{'Hash Rate, 4 weeks'}"),
-        Text(f"{get4WNtwrkHashps / EXAHASH:.1f} EH/s"),
+        Text(f"{tblData.get4WNtwrkHashps:.1f} EH/s"),
     )
     tblNetwork.add_row(
         Text(f"{'Hash Rate, 1-day'}"),
-        Text(f"{get1DNtwrkHashps / EXAHASH:.1f} EH/s"),
+        Text(f"{tblData.get1DNtwrkHashps:.1f} EH/s"),
     )
     tblNetwork.add_row(
         Text(f"{'Chain Work'}"),
-        Text(f"{math.log2(int(getBlockChainInfo['chainwork'], 16)):.1f} bits"),
+        Text(f"{tblData.chainwork:.1f} bits"),
     )
     tblNetwork.add_row(
         Text(f"{'Total Transactions'}"),
-        Text(f"{totalTXs:,.0f}"),
+        Text(f"{tblData.totalTXs:,.0f}"),
     )
     tblNetwork.add_row(
         Text(f"{'  Rate, 30 Days'}"),
-        Text(f"{txRatePerSec:.1f} tx/s"),
+        Text(f"{tblData.txRatePerSec:.1f} tx/s"),
     )
     tblNetwork.add_row(
         Text(f"{'  Count, 30 Days'}"),
-        Text(f"{txCount:,.0f}")
+        Text(f"{tblData.txCount:,.0f}")
     )
+    
     #Metrics / Events
-    tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, min_width = 45, caption=COPYRIGHT, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') #
+    tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, min_width = 45, caption=COPYRIGHT, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') # 
     tblMetricEvents.add_column("", style='bright_black')
     tblMetricEvents.add_column("", justify='right', style='bright_white')
     tblMetricEvents.add_row(
         Text(f"{'Difficulty Epoch'}"),
-        Text(f"{1+(MAX_HEIGHT // nInterval):.0f}"),
+        Text(f"{tblData.diffEpoch:.0f}"),
     )
     tblMetricEvents.add_row(
-        Text(f"{'Block time, 2016 blocks'}"),
-        Text(f"{avg_2016_blockTime}"),
+        Text(f"{'Block time, Prev Epoch'}"),
+        Text(f"{tblData.avg_2016_blockTime}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'Block time, Diff. Epoch'}"),
-        Text(f"{avgEpochBlockTime}"),
+        Text(f"{tblData.avgEpochBlockTime}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'  Blocks to Retarget'}"),
-        Text(f"{epochBlocksRemain:,.0f}"),
+        Text(f"{tblData.epochBlocksRemain:,.0f}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'  Retarget Date'}"),
-        Text(f"{RetargetDate}"),
+        Text(f"{tblData.RetargetDate}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'  Estimated Change'}"),
-        Text(f"{estDiffChange:.01f}%"), 
+        Text(f"{tblData.estDiffChange:.01f}%"), 
     )
     tblMetricEvents.add_row(
         Text(f"{'  Retarget in nBits'}"),
-        Text(f"{bnNew:.0f}"),
+        Text(f"{tblData.bnNew:.0f}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'Blocks to Halving'}"),
-        Text(f"{nBlocksToHalving:,.0f}"),
+        Text(f"{tblData.nBlocksToHalving:,.0f}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'  Estimate Halving on'}"),
-        Text(f"{halvingDate}"),
+        Text(f"{tblData.halvingDate}"),
     )
     tblMetricEvents.add_row(
         Text(f"{'  Subsidy Epoch'}"),
-        Text(f"{1 +(MAX_HEIGHT // HALVING_BLOCKS)}")  
+        Text(f"{tblData.subsidyEpoch}")  
     )
     
     return tblMarket, tblGold, tblSupply, tblMining, tblBestBlock, tblNetwork, tblMetricEvents 
+
