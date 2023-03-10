@@ -1,15 +1,16 @@
-# Utility
+# Utilities
 
 import json, requests
 from os import system, name
 
+# Package Info
 VERSION = 101
 SUB_VERSION = 'v0.01'
 SUB_SUB_VERSION = 'BETA'
 PACKAGE_NAME = 'Bitcoin Economics'
-COPYRIGHT = '© Farley\nInspiration from https://bitcoin.clarkmoody.com/dashboard'
+COPYRIGHT = '© Farley'
 
-# Bitcoin hardcoded info
+# Bitcoin Hard-Code Info
 GENESIS_REWARD = 50
 COIN = 100000000
 CENT = 1000000
@@ -30,6 +31,7 @@ GOLD_SUPPLY_METRIC_TON = 208874
 GOLD_OZ_ABOVE_GROUND = OUNCES_IN_METRIC_TON * GOLD_SUPPLY_METRIC_TON
 
 PrevBTCPrice = None
+PrevGLDPrice = None
 
 class GetAssetPrices(object):  
     def __init__(self, GoldForexURL="https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD",
@@ -39,18 +41,23 @@ class GetAssetPrices(object):
         self.getBTCURL =  getBTCURL
         
     def getBTCUSD(self):
+        global PrevBTCPrice
+        
         try:
             r = self._call(self.getBTCURL)
             return r['bpi']['USD']['rate_float']
         except:
-            return None
+            return PrevBTCPrice
     
     def getGLDUSD(self):
+        global PrevGLDPrice
+        
         try:
             r = self._call(self.GoldForexURL)[1]
+            prevGLDPrice = r['spreadProfilePrices'][0]['ask']
             return r['spreadProfilePrices'][0]['ask']
         except:
-            return None
+            return PrevGLDPrice
     
     def _call(self, url):
         try:
@@ -61,6 +68,7 @@ class GetAssetPrices(object):
             return None
 
 
+# Clear screen between refresh
 def clear():
  
     # for windows
@@ -72,39 +80,8 @@ def clear():
         _ = system('clear')
 
 
-def BlockSubsidy(MAX_HEIGHT):
+def blockSubsidy(MAX_HEIGHT):
     bs = GENESIS_REWARD * COIN
     bs >>= int(MAX_HEIGHT / HALVING_BLOCKS)
     bs /= COIN
     return bs 
-
-
-def marketCapitalization(coinsMined, blockSubsidy, UNSPENDABLE):
-    getAssetPrices = GetAssetPrices()
-    BTCPrice = getAssetPrices.getBTCUSD()
-    GLDPrice = getAssetPrices.getGLDUSD()
-    
-    if BTCPrice != None:
-        satusd = (1/(BTCPrice * CONVERT_TO_SATS))
-        blockSubsidyValue =  blockSubsidy * BTCPrice
-        MarketCap = ((coinsMined + UNSPENDABLE) * BTCPrice) / BILLION  # Format in Billions
-    else:
-        satusd = 0
-        blockSubsidyValue = 0
-        MarketCap = 0
-    
-    if BTCPrice != None and GLDPrice != None:
-        BTCvsGOLDMarketCap = ((coinsMined + UNSPENDABLE) * BTCPrice) / (GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
-        BTCPricedInGold = BTCPrice/GLDPrice
-    else:
-        BTCvsGOLDMarketCap = 0
-        BTCPricedInGold = 0
-
-    if BTCPrice == None:
-        BTCPrice = 0        
-    
-    PctIssued = ((coinsMined + UNSPENDABLE) / MAX_SUPPLY) * 100
-    IssuanceRemaining = MAX_SUPPLY - coinsMined - UNSPENDABLE
-    
-    return satusd, blockSubsidyValue, MarketCap, BTCvsGOLDMarketCap, BTCPricedInGold, PctIssued, IssuanceRemaining, BTCPrice
-
