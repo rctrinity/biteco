@@ -27,7 +27,7 @@ from rich.console import Console as console
 from rich import print, pretty
 from gentables import generateLayout
 from util import clear
-
+from rich import print, pretty
           
 def main():
     clear() 
@@ -37,7 +37,7 @@ def main():
         with Live(Align.center(generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
                 try:
-                    sleep(60*0.02) 
+                    sleep(60*0.03) 
                     live_table.update(Align.center(generateLayout(), vertical="middle"), refresh=True)
                 except KeyboardInterrupt:
                     raise
