@@ -124,9 +124,9 @@ class generateDataForTables(object):
             self.satusd = 0    
         self.MarketCap = self.marketCap()
         self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
-        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
-        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) << 1) / EXAHASH    
-        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) // 14) / EXAHASH 
+        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
+        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
+        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH 
         self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
         
     
