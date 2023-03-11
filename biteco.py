@@ -39,7 +39,7 @@ def main():
             while True:
                 try:
                     sleep(60*0.03) 
-                    live_table.update(Align.center(Dashboard.generateLayout(), vertical="middle"), refresh=True)
+                    live_table.update(Align.center(Dashboard.updateLayout(), vertical="middle"), refresh=True)
                 except KeyboardInterrupt:
                     raise
 
