@@ -19,31 +19,33 @@ Requires:
 This terminal dashboard was inspired by Clark Moody's Bitcoin dashboard: https://bitcoin.clark.moody/dashboard
 '''
 
-import sys
 from time import sleep
 from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
-from rich import print, pretty
-from gentables import generateLayout
+from gentables import dashboard
 from util import clear
 from rich import print, pretty
+
           
 def main():
+    
     clear() 
     print("[bright_black]Initializing dashboard[white]...")
+    Dashboard = dashboard()
     
     try:        
-        with Live(Align.center(generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
+        with Live(Align.center(Dashboard.generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
                 try:
                     sleep(60*0.03) 
-                    live_table.update(Align.center(generateLayout(), vertical="middle"), refresh=True)
+                    live_table.update(Align.center(Dashboard.generateLayout(), vertical="middle"), refresh=True)
                 except KeyboardInterrupt:
                     raise
 
     except (KeyboardInterrupt, SystemExit):
         print(f"{'Shutting down: Keyboard Interrupt.'}")
+          
 
 if __name__ == '__main__':
     main()    
