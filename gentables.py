@@ -64,22 +64,37 @@ class generateDataForTables(object):
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None): 
                  
-        self.proxy=rpc.Proxy()
+         getAssetPrices = GetAssetPrices()
         self.nTargetTimespan = 14 * 24 * 60 * 60                     
         self.nTargetSpacing = 10 * 60                                
         self.nSecsHour = 60 * 60                                     
         self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
-        self.nInterval = self.nTargetTimespan / self.nTargetSpacing                
+        self.nInterval = self.nTargetTimespan / self.nTargetSpacing
+        # Proxy calls
+        self.proxy=rpc.Proxy()
         self.bestBlockHash = self.proxy.getbestblockhash()
-        self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)   
+        self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
+        currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
+        chainTxStats = self.proxy.call('getchaintxstats')  
+        getBlockChainInfo = self.proxy.call('getblockchaininfo')
+        getNetworkInfo = self.proxy.call('getnetworkinfo') 
+        self.Connections = getNetworkInfo['connections'] 
+        self.ConnectionsIn = getNetworkInfo['connections_in']
+        self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
+        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
+        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
+        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH
+        
+                    
+        
         self.bestNonce = self.bestBlockHeader.nNonce
         self.difficulty = self.bestBlockHeader.difficulty/TRILLION
         self.targetBits = self.bestBlockHeader.nBits
         self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
-        currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
+        
         self.coinsMined = float(currentInfo['total_amount'])
         self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
-        getAssetPrices = GetAssetPrices()
+        
         self.BTCPrice = getAssetPrices.getBTCUSD()
         if self.BTCPrice == None:
             self.BTCPrice = 0
@@ -89,17 +104,15 @@ class generateDataForTables(object):
         try:
             self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
         except:
-            self.BTCPricedInGold =0
+            self.BTCPricedInGold = 0
         try:
             self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
         except:
             self.BTCvsGOLDMarketCap = 0
-        self.totalTXs = currentInfo['txouts']         
-        chainTxStats = self.proxy.call('getchaintxstats')  
+        
         self.totalTXs = chainTxStats['txcount']
         self.txRatePerSec = chainTxStats['txrate']
-        self.txCount = chainTxStats['window_tx_count']        
-        getBlockChainInfo = self.proxy.call('getblockchaininfo') 
+        self.txCount = chainTxStats['window_tx_count']         
         self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
         self.MAX_HEIGHT = getBlockChainInfo['blocks']
         self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
@@ -107,10 +120,7 @@ class generateDataForTables(object):
         self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
         self.BlockSubsidy = blockSubsidy(self.MAX_HEIGHT)
         self.blockSubsidyValue = self.BlockSubsidy * self.BTCPrice
-        self.subsidyEpoch = 1 +(self.MAX_HEIGHT // HALVING_BLOCKS)        
-        getNetworkInfo = self.proxy.call('getnetworkinfo') 
-        self.Connections = getNetworkInfo['connections'] 
-        self.ConnectionsIn = getNetworkInfo['connections_in']                      
+        self.subsidyEpoch = 1 +(self.MAX_HEIGHT // HALVING_BLOCKS)                        
         self.BestBlockAge = self.bestBlockAge()    
         self.avg_2016_blockTime = self.AvgBlockTimePrevEpoch()
         self.avgEpochBlockTime, self.EpochHead = self.AvgBlockTimeEpoch()       
@@ -123,10 +133,7 @@ class generateDataForTables(object):
         except:
             self.satusd = 0    
         self.MarketCap = self.marketCap()
-        self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
-        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
-        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
-        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH 
+        
         self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
         
     
