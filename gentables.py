@@ -63,8 +63,8 @@ class generateDataForTables(object):
                  EpochHead = 0, 
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None): 
-                 
-         getAssetPrices = GetAssetPrices()
+              
+        getAssetPrices = GetAssetPrices()
         self.nTargetTimespan = 14 * 24 * 60 * 60                     
         self.nTargetSpacing = 10 * 60                                
         self.nSecsHour = 60 * 60                                     
