@@ -205,9 +205,7 @@ class dashboard(object):
                 tblBestBlock=None, 
                 tblNetwork=None, 
                 tblMetricEvents=None):
-         
-        #self.layout = Layout()
-        x = 0
+        self.layout=layout
     
     def generateLayout(self) -> Panel:        
         self.layout = Layout()
