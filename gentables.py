@@ -206,11 +206,11 @@ class dashboard(object):
                 tblNetwork=None, 
                 tblMetricEvents=None):
          
-        self.layout = Layout()
+        #self.layout = Layout()
+        x = 0
     
     def generateLayout(self) -> Panel:        
-        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents = self.generateTable()
-    
+        self.layout = Layout()
         self.layout.split_column(
             Layout(name="market"),
             Layout(name="gold"),
@@ -220,13 +220,7 @@ class dashboard(object):
             Layout(name="network"),
             Layout(name="metricevents")
             )
-        self.layout["market"].update(self.tblMarket)
-        self.layout["gold"].update(self.tblGold)
-        self.layout["supply"].update(self.tblSupply)
-        self.layout["mining"].update(self.tblMining)
-        self.layout["bestblock"].update(self.tblBestBlock)
-        self.layout["network"].update(self.tblNetwork)
-        self.layout["metricevents"].update(self.tblMetricEvents)
+       
     
         self.layout["market"].size = 6
         self.layout["gold"].size = 5
@@ -235,7 +229,23 @@ class dashboard(object):
         self.layout["bestblock"].size = 9
         self.layout["network"].size = 14
         self.layout["metricevents"].size = 20
-    
+        
+        r = self.updateLayout()
+        
+        return r
+        
+        
+    def updateLayout(self) -> Panel:
+        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents = self.generateTable()
+        
+        self.layout["market"].update(self.tblMarket)
+        self.layout["gold"].update(self.tblGold)
+        self.layout["supply"].update(self.tblSupply)
+        self.layout["mining"].update(self.tblMining)
+        self.layout["bestblock"].update(self.tblBestBlock)
+        self.layout["network"].update(self.tblNetwork)
+        self.layout["metricevents"].update(self.tblMetricEvents)
+        
         return Panel(self.layout, title=PACKAGE_NAME, box=box.SIMPLE,  expand=False, subtitle=None, width=50, height=65, border_style='white')  
 
 
