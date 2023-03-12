@@ -1,6 +1,6 @@
 '''
  biteco.py
- v0.01 BETA
+ v0.1.0 Stable
  Capture Market, Network, Gold, Metrics, and upcoming Events (difficulty and halving)  
  Copyright (c) 2023 Farley
  ___             _       _  _ 
