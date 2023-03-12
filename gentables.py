@@ -12,6 +12,15 @@ import math
 from typing import Optional, Tuple
 from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION
 
+# Dashboard attributes
+panelBox = box.SIMPLE
+dashBox = box.HORIZONTALS
+tblBrdrStyle = 'dim bold deep_sky_blue1'
+tblTtlStyle = 'white'
+colDescStyle = 'bright_black'
+colValStyle = 'bright_white'
+tblwidth = 45
+
 
 class generateDataForTables(object):
     def __init__(self, 
@@ -65,6 +74,10 @@ class generateDataForTables(object):
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None): 
                  
+        self.proxy=proxy
+        if self.proxy == None:
+            self.proxy=rpc.Proxy()
+
         getAssetPrices = GetAssetPrices()
         self.nTargetTimespan = 14 * 24 * 60 * 60                     
         self.nTargetSpacing = 10 * 60                                
@@ -72,7 +85,6 @@ class generateDataForTables(object):
         self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
         self.nInterval = self.nTargetTimespan / self.nTargetSpacing
         # Proxy calls
-        self.proxy=rpc.Proxy()
         self.bestBlockHash = self.proxy.getbestblockhash()
         self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
         currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
@@ -84,13 +96,12 @@ class generateDataForTables(object):
         self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
         self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
         self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
-        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH
+        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH        
         
         self.bestNonce = self.bestBlockHeader.nNonce
         self.difficulty = self.bestBlockHeader.difficulty/TRILLION
         self.targetBits = self.bestBlockHeader.nBits
         self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
-        
         self.coinsMined = float(currentInfo['total_amount'])
         self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
         
@@ -134,7 +145,7 @@ class generateDataForTables(object):
         self.MarketCap = self.marketCap()
         
         self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
-        
+    
     
     def marketCap(self) -> float:
         return ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
@@ -244,8 +255,7 @@ class dashboard(object):
         self.layout["network"].update(self.tblNetwork)
         self.layout["metricevents"].update(self.tblMetricEvents)
         
-        return Panel(self.layout, title=PACKAGE_NAME, box=box.SIMPLE,  expand=False, subtitle=None, width=50, height=65, border_style='white')  
-
+        return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  expand=False, subtitle=None, width=50, height=65, border_style='white')  
 
     def generateTable(self) -> Table:
         global PrevBTCPrice
@@ -256,9 +266,9 @@ class dashboard(object):
             PrevBTCPrice = self.tblData.BTCPrice      
 
         #Market
-        self.tblMarket = Table(title_justify='left', title=' Market', show_header=False, min_width = 45, show_footer=False, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white')  
-        self.tblMarket.add_column("", style='bright_black')
-        self.tblMarket.add_column("", justify='right', style='bright_white')
+        self.tblMarket = Table(title_justify='left', title=' Market', show_header=False, width = tblwidth, show_footer=False, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
+        self.tblMarket.add_column("", style=colDescStyle)
+        self.tblMarket.add_column("", justify='right', style=colValStyle)
         if int(round(self.tblData.BTCPrice)) > int(round(PrevBTCPrice)):
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
@@ -272,7 +282,7 @@ class dashboard(object):
         else:
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.tblData.BTCPrice:,.0f}", style='bright_white')
+            Text(f"${self.tblData.BTCPrice:,.0f}", style=colValStyle)
             )
     
         PrevBTCPrice = self.tblData.BTCPrice
@@ -287,9 +297,9 @@ class dashboard(object):
         )
     
         #Gold
-        self.tblGold = Table(title=' Gold', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white')  
-        self.tblGold.add_column("", style='bright_black')
-        self.tblGold.add_column("", justify='right', style='bright_white')
+        self.tblGold = Table(title=' Gold', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
+        self.tblGold.add_column("", style=colDescStyle)
+        self.tblGold.add_column("", justify='right', style=colValStyle)
         self.tblGold.add_row(
             Text(f"{'Bitcoin priced in Gold'}"),
             Text(f"{self.tblData.BTCPricedInGold:.1f} oz"),
@@ -300,9 +310,9 @@ class dashboard(object):
         )
     
         #Supply
-        self.tblSupply = Table(title=' Supply', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white')  
-        self.tblSupply.add_column("", style='bright_black')
-        self.tblSupply.add_column("", justify='right', style='bright_white')
+        self.tblSupply = Table(title=' Supply', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
+        self.tblSupply.add_column("", style=colDescStyle)
+        self.tblSupply.add_column("", justify='right', style=colValStyle)
         self.tblSupply.add_row(
             Text(f"{'Money Supply'}"),
             Text(f"{self.tblData.coinsMined:,.2f}"),
@@ -322,9 +332,9 @@ class dashboard(object):
         )
     
         # Mining Economics
-        self.tblMining = Table(title=' Mining Economics', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white')  
-        self.tblMining.add_column("", style='bright_black')
-        self.tblMining.add_column("", justify='right', style='bright_white')
+        self.tblMining = Table(title=' Mining Economics', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
+        self.tblMining.add_column("", style=colDescStyle)
+        self.tblMining.add_column("", justify='right', style=colValStyle)
         self.tblMining.add_row(
             Text(f"{'Block Subsidy'}"),
             Text(f"{self.tblData.BlockSubsidy:.2f} BTC"),
@@ -335,9 +345,9 @@ class dashboard(object):
         )
     
         #Best Block Summary
-        self.tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') 
-        self.tblBestBlock.add_column("", style='bright_black')
-        self.tblBestBlock.add_column("", justify='right', style='bright_white')
+        self.tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
+        self.tblBestBlock.add_column("", style=colDescStyle)
+        self.tblBestBlock.add_column("", justify='right', style=colValStyle)
         self.tblBestBlock.add_row(
             Text(f"{'Block Height'}"),
             Text(f"{self.tblData.MAX_HEIGHT:,.0f}"),
@@ -364,9 +374,9 @@ class dashboard(object):
         )
     
         #Network Summary
-        self.tblNetwork = Table(title=' Network Summary', title_justify='left', show_header=False, show_footer=False, min_width = 45, box=box.HORIZONTALS, highlight=True, border_style='dim bold red', style='white') 
-        self.tblNetwork.add_column("", style='bright_black')
-        self.tblNetwork.add_column("", justify='right', style='bright_white')
+        self.tblNetwork = Table(title=' Network Summary', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
+        self.tblNetwork.add_column("", style=colDescStyle)
+        self.tblNetwork.add_column("", justify='right', style=colValStyle)
         self.tblNetwork.add_row(
             Text(f"{'Connections'}"),
             Text(f"{self.tblData.Connections}"),
@@ -414,10 +424,10 @@ class dashboard(object):
         )
     
         #Metrics / Events
-        self.tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, min_width = 45, caption=COPYRIGHT, box=box.HORIZONTALS, 
-                                highlight=True, border_style='dim bold red', style='white') 
-        self.tblMetricEvents.add_column("", style='bright_black')
-        self.tblMetricEvents.add_column("", justify='right', style='bright_white')
+        self.tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, width = tblwidth, caption=COPYRIGHT, box=dashBox, 
+                                highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
+        self.tblMetricEvents.add_column("", style=colDescStyle)
+        self.tblMetricEvents.add_column("", justify='right', style=colValStyle)
         self.tblMetricEvents.add_row(
             Text(f"{'Difficulty Epoch'}"),
             Text(f"{self.tblData.diffEpoch:.0f}"),
@@ -460,5 +470,6 @@ class dashboard(object):
         )
     
         return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents 
+
 
 
