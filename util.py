@@ -5,8 +5,8 @@ from os import system, name
 
 # Package Info
 VERSION = 101
-SUB_VERSION = 'v0.01'
-SUB_SUB_VERSION = 'BETA'
+SUB_VERSION = 'v0.1.0'
+SUB_SUB_VERSION = 'Stable'
 PACKAGE_NAME = 'Bitcoin Economics'
 COPYRIGHT = '© Farley'
 
@@ -60,13 +60,10 @@ class GetAssetPrices(object):
             return PrevGLDPrice
     
     def _call(self, url):
-        try:
-            self = requests.get(url)
-            url_json = self.text
-            return json.loads(url_json)       
-        except:
-            return None
-
+        self = requests.get(url)
+        url_json = self.text
+        return json.loads(url_json)       
+        
 
 # Clear screen between refresh
 def clear():
@@ -85,3 +82,4 @@ def blockSubsidy(MAX_HEIGHT):
     bs >>= int(MAX_HEIGHT / HALVING_BLOCKS)
     bs /= COIN
     return bs 
+
