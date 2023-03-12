@@ -14,7 +14,6 @@ Requires:
    
    python-bitcoinlib by Peter Todd ( https://github.com/petertodd/python-bitcoinlib )
      git clone https://github.com/petertodd/python-bitcoinlib.git
-         This uses a modified copy of rpc.py from bitcoin.core, which is included in custom folder
 
 This terminal dashboard was inspired by Clark Moody's Bitcoin dashboard: https://bitcoin.clark.moody/dashboard
 '''
