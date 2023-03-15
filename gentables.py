@@ -9,7 +9,7 @@ from bitcoin.core.serialize import uint256_from_compact, compact_from_uint256
 import datetime, time
 from time import sleep
 import math
-from typing import Optional, Tuple
+from typing import Tuple
 from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION
 
 # Dashboard attributes
@@ -166,12 +166,12 @@ class generateDataForTables(object):
     
     def AvgBlockTimeEpoch(self) -> str:
         epochStartBlock = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
-        epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock))  
         
         try:
+            epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock))  
             return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
         except:
-            return '0:00'
+            return '0:00', 0
     
     
     def bestBlockAge(self) -> str:
@@ -255,9 +255,9 @@ class dashboard(object):
         self.layout["network"].update(self.tblNetwork)
         self.layout["metricevents"].update(self.tblMetricEvents)
         
-        return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  expand=False, subtitle=None, width=50, height=65, border_style='white')  
+        return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65)  
 
-    def generateTable(self) -> Table:
+    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice
     
         self.tblData = generateDataForTables()   
@@ -470,6 +470,7 @@ class dashboard(object):
         )
     
         return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents 
+
 
 
 
