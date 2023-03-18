@@ -1,6 +1,6 @@
 '''
  biteco.py
- v0.1.0 Stable
+ v0.1.1 Stable
  Capture Market, Network, Gold, Metrics, and upcoming Events (difficulty and halving)  
  Copyright (c) 2023 Farley
  ___             _       _  _ 
@@ -23,8 +23,15 @@ from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
 from gentables import dashboard
-from util import clear
+import util
+from util import clear, q
 from rich import print, pretty
+from gentables import generateDataForTables
+
+
+def liveUpdate():
+    global q
+    q.put(generateDataForTables())
 
           
 def main():
@@ -33,11 +40,17 @@ def main():
     print("[bright_black]Initializing dashboard[white]...")
     Dashboard = dashboard()
     
+    # Pre-fill our Queue
+    for i in range(3):
+        liveUpdate()
+        sleep(1)
+    
     try:        
         with Live(Align.center(Dashboard.generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
                 try:
-                    sleep(60*0.03) 
+                    liveUpdate()
+                    sleep(60*0.02) 
                     live_table.update(Align.center(Dashboard.updateLayout(), vertical="middle"), refresh=True)
                 except KeyboardInterrupt:
                     raise
