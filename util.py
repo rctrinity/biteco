@@ -32,6 +32,9 @@ GOLD_OZ_ABOVE_GROUND = OUNCES_IN_METRIC_TON * GOLD_SUPPLY_METRIC_TON
 
 PrevBTCPrice = None
 PrevGLDPrice = None
+PrevBlockHeight = None
+
+q = Queue(maxsize = 0)
 
 class GetAssetPrices(object):  
     def __init__(self, GoldForexURL="https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD",
