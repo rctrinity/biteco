@@ -2,6 +2,7 @@
 
 import json, requests
 from os import system, name
+from queue import Queue
 
 # Package Info
 VERSION = 101
