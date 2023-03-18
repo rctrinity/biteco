@@ -10,7 +10,9 @@ import datetime, time
 from time import sleep
 import math
 from typing import Tuple
-from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION
+import util
+from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
+COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION, q
 
 # Dashboard attributes
 panelBox = box.SIMPLE
@@ -20,6 +22,8 @@ tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
 tblwidth = 45
+
+# Initializing a queue 
 
 
 class generateDataForTables(object):
@@ -73,7 +77,7 @@ class generateDataForTables(object):
                  EpochHead = 0, 
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None): 
-                 
+        global PrevBlockHeight
         self.proxy=proxy
         if self.proxy == None:
             self.proxy=rpc.Proxy()
@@ -125,6 +129,8 @@ class generateDataForTables(object):
         self.txCount = chainTxStats['window_tx_count']         
         self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
         self.MAX_HEIGHT = getBlockChainInfo['blocks']
+        if PrevBlockHeight == None:
+            PrevBlockHeight = self.MAX_HEIGHT
         self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
         self.verification = getBlockChainInfo['verificationprogress'] * 100        
         self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
@@ -257,10 +263,11 @@ class dashboard(object):
         
         return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65)  
 
-    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
-        global PrevBTCPrice
     
-        self.tblData = generateDataForTables()   
+    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
+        global PrevBTCPrice, PrevBlockHeight, q
+    
+        self.tblData = q.get()   # Grab from our queue, first in, first out method
     
         if PrevBTCPrice == None:
             PrevBTCPrice = self.tblData.BTCPrice      
@@ -348,10 +355,17 @@ class dashboard(object):
         self.tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
         self.tblBestBlock.add_column("", style=colDescStyle)
         self.tblBestBlock.add_column("", justify='right', style=colValStyle)
-        self.tblBestBlock.add_row(
-            Text(f"{'Block Height'}"),
-            Text(f"{self.tblData.MAX_HEIGHT:,.0f}"),
-        )
+        if self.tblData.MAX_HEIGHT > PrevBlockHeight:  
+            self.tblBestBlock.add_row(
+                Text(f"{'Block Height'}"),
+                Text(f"{self.tblData.MAX_HEIGHT:,.0f}", style='dim bold green'),
+                )
+        else:
+            self.tblBestBlock.add_row(
+               Text(f"{'Block Height'}"),
+               Text(f"{self.tblData.MAX_HEIGHT:,.0f}", style=colValStyle),
+               )
+        PrevBlockHeight = self.tblData.MAX_HEIGHT
         self.tblBestBlock.add_row(
             Text(f"{'Chain size'}"),
             Text(f"{self.tblData.chainSize:.1f} GB"),
