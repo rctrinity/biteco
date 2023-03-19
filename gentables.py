@@ -27,6 +27,9 @@ tblwidth = 45
 
 
 class generateDataForTables(object):
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+        
     def __init__(self, 
                  proxy=None, 
                  nBlocksToHalving=0, 
@@ -171,18 +174,18 @@ class generateDataForTables(object):
         
     
     def AvgBlockTimeEpoch(self) -> str:
-        epochStartBlock = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
+        self = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
         
         try:
-            epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock))  
+            epochHead = self.proxy.getblockheader(self.proxy.getblockhash(self))  
             return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
         except:
             return '0:00', 0
     
     
     def bestBlockAge(self) -> str:
-        r = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
-        return r
+        self = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
+        return self
         
     def Retarget(self) -> tuple[float, int, str, int]:
         nEpochTargetTimespan = int(( self.MAX_HEIGHT % self.nInterval ) * self.nTargetSpacing)
@@ -212,6 +215,9 @@ class generateDataForTables(object):
         return datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
         
 class dashboard(object):
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+        
     def __init__(self,
                 layout=None,
                 tblData=None,
@@ -245,9 +251,9 @@ class dashboard(object):
         self.layout["network"].size = 14
         self.layout["metricevents"].size = 20
         
-        r = self.updateLayout()
+        self = self.updateLayout()
         
-        return r
+        return self
         
         
     def updateLayout(self) -> Panel:
@@ -260,47 +266,47 @@ class dashboard(object):
         self.layout["bestblock"].update(self.tblBestBlock)
         self.layout["network"].update(self.tblNetwork)
         self.layout["metricevents"].update(self.tblMetricEvents)
-        
-        return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65)  
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65)
+        return self
 
     
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice, PrevBlockHeight, q
     
-        self.tblData = q.get()   # Grab from our queue, first in, first out method
+        self = q.get()   # Grab from our queue, first in, first out method
     
         if PrevBTCPrice == None:
-            PrevBTCPrice = self.tblData.BTCPrice      
+            PrevBTCPrice = self.BTCPrice      
 
         #Market
         self.tblMarket = Table(title_justify='left', title=' Market', show_header=False, width = tblwidth, show_footer=False, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
         self.tblMarket.add_column("", style=colDescStyle)
         self.tblMarket.add_column("", justify='right', style=colValStyle)
-        if int(round(self.tblData.BTCPrice)) > int(round(PrevBTCPrice)):
+        if int(round(self.BTCPrice)) > int(round(PrevBTCPrice)):
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.tblData.BTCPrice:,.0f}", style='dim bold green')
+            Text(f"${self.BTCPrice:,.0f}", style='dim bold green')
             )
-        elif int(round(self.tblData.BTCPrice)) < int(round(PrevBTCPrice)):
+        elif int(round(self.BTCPrice)) < int(round(PrevBTCPrice)):
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.tblData.BTCPrice:,.0f}", style='dim bold red')  
+            Text(f"${self.BTCPrice:,.0f}", style='dim bold red')  
             )
         else:
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.tblData.BTCPrice:,.0f}", style=colValStyle)
+            Text(f"${self.BTCPrice:,.0f}", style=colValStyle)
             )
     
-        PrevBTCPrice = self.tblData.BTCPrice
+        PrevBTCPrice = self.BTCPrice
     
         self.tblMarket.add_row(
             Text(f"{'Sats per Dollar'}"),
-            Text(f"{self.tblData.satusd:,.0f}"),
+            Text(f"{self.satusd:,.0f}"),
         )
         self.tblMarket.add_row(
             Text(f"{'Market Capitalization'}"),
-            Text(f"${self.tblData.MarketCap:.1f}B")
+            Text(f"${self.MarketCap:.1f}B")
         )
     
         #Gold
@@ -309,11 +315,11 @@ class dashboard(object):
         self.tblGold.add_column("", justify='right', style=colValStyle)
         self.tblGold.add_row(
             Text(f"{'Bitcoin priced in Gold'}"),
-            Text(f"{self.tblData.BTCPricedInGold:.1f} oz"),
+            Text(f"{self.BTCPricedInGold:.1f} oz"),
         )
         self.tblGold.add_row(
             Text(f"{'Bitcoin vs. Gold Market Cap'}"),
-            Text(f"{self.tblData.BTCvsGOLDMarketCap:.2f}%")
+            Text(f"{self.BTCvsGOLDMarketCap:.2f}%")
         )
     
         #Supply
@@ -322,20 +328,20 @@ class dashboard(object):
         self.tblSupply.add_column("", justify='right', style=colValStyle)
         self.tblSupply.add_row(
             Text(f"{'Money Supply'}"),
-            Text(f"{self.tblData.coinsMined:,.2f}"),
+            Text(f"{self.coinsMined:,.2f}"),
         )
         self.tblSupply.add_row(
             Text(f"{'Percentage Issued'}"),
-            Text(f"{self.tblData.PctIssued:.2f}%"),
+            Text(f"{self.PctIssued:.2f}%"),
         )
         self.tblSupply.add_row(
             Text(f"{'Unspendable'}"),
-            Text(f"{self.tblData.UNSPENDABLE:.2f}")
+            Text(f"{self.UNSPENDABLE:.2f}")
    
         )
         self.tblSupply.add_row(
             Text(f"{'Issuance Remaining'}"),
-            Text(f"{self.tblData.IssuanceRemaining:,.2f}"),
+            Text(f"{self.IssuanceRemaining:,.2f}"),
         )
     
         # Mining Economics
@@ -344,47 +350,47 @@ class dashboard(object):
         self.tblMining.add_column("", justify='right', style=colValStyle)
         self.tblMining.add_row(
             Text(f"{'Block Subsidy'}"),
-            Text(f"{self.tblData.BlockSubsidy:.2f} BTC"),
+            Text(f"{self.BlockSubsidy:.2f} BTC"),
         )
         self.tblMining.add_row(
             Text(f"{'Subsidy value'}"),
-            Text(f"${self.tblData.blockSubsidyValue:,.0f}")
+            Text(f"${self.blockSubsidyValue:,.0f}")
         )
     
         #Best Block Summary
         self.tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
         self.tblBestBlock.add_column("", style=colDescStyle)
         self.tblBestBlock.add_column("", justify='right', style=colValStyle)
-        if self.tblData.MAX_HEIGHT > PrevBlockHeight:  
+        if self.MAX_HEIGHT > PrevBlockHeight:  
             self.tblBestBlock.add_row(
                 Text(f"{'Block Height'}"),
-                Text(f"{self.tblData.MAX_HEIGHT:,.0f}", style='dim bold green'),
+                Text(f"{self.MAX_HEIGHT:,.0f}", style='dim bold green'),
                 )
         else:
             self.tblBestBlock.add_row(
                Text(f"{'Block Height'}"),
-               Text(f"{self.tblData.MAX_HEIGHT:,.0f}", style=colValStyle),
+               Text(f"{self.MAX_HEIGHT:,.0f}", style=colValStyle),
                )
-        PrevBlockHeight = self.tblData.MAX_HEIGHT
+        PrevBlockHeight = self.MAX_HEIGHT
         self.tblBestBlock.add_row(
             Text(f"{'Chain size'}"),
-            Text(f"{self.tblData.chainSize:.1f} GB"),
+            Text(f"{self.chainSize:.1f} GB"),
         )
         self.tblBestBlock.add_row(
             Text(f"{'nNonce'}"),
-            Text(f"{self.tblData.bestNonce:.0f}"),
+            Text(f"{self.bestNonce:.0f}"),
         )
         self.tblBestBlock.add_row(
             Text(f"{'Difficulty'}"),
-            Text(f"{self.tblData.difficulty:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"), 
+            Text(f"{self.difficulty:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"), 
         )
         self.tblBestBlock.add_row(
             Text(f"{'Target in nBits'}"),
-            Text(f"{self.tblData.targetBits}"),
+            Text(f"{self.targetBits}"),
         )
         self.tblBestBlock.add_row(
             Text(f"{'Time'}"),
-            Text(f"{self.tblData.BestBlockAge} ago")
+            Text(f"{self.BestBlockAge} ago")
         )
     
         #Network Summary
@@ -393,48 +399,48 @@ class dashboard(object):
         self.tblNetwork.add_column("", justify='right', style=colValStyle)
         self.tblNetwork.add_row(
             Text(f"{'Connections'}"),
-            Text(f"{self.tblData.Connections}"),
+            Text(f"{self.Connections}"),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Inbound'}"),
-            Text(f"{self.tblData.ConnectionsIn}"),
+            Text(f"{self.ConnectionsIn}"),
         )
     
         self.tblNetwork.add_row(
             Text(f"{'Verification Progress'}"),
-            Text(f"{self.tblData.verification:,.04f}%"),
+            Text(f"{self.verification:,.04f}%"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, Epoch'}"),
-            Text(f"{self.tblData.getNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.getNtwrkHashps:.1f} EH/s"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 7-day'}"),
-            Text(f"{self.tblData.get7DNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get7DNtwrkHashps:.1f} EH/s"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 4 weeks'}"),
-            Text(f"{self.tblData.get4WNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get4WNtwrkHashps:.1f} EH/s"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 1-day'}"),
-            Text(f"{self.tblData.get1DNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get1DNtwrkHashps:.1f} EH/s"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Chain Work'}"),
-            Text(f"{self.tblData.chainwork:.1f} bits"),
+            Text(f"{self.chainwork:.1f} bits"),
         )
         self.tblNetwork.add_row(
             Text(f"{'Total Transactions'}"),
-            Text(f"{self.tblData.totalTXs:,.0f}"),
+            Text(f"{self.totalTXs:,.0f}"),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Rate, 30 Days'}"),
-            Text(f"{self.tblData.txRatePerSec:.1f} tx/s"),
+            Text(f"{self.txRatePerSec:.1f} tx/s"),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Count, 30 Days'}"),
-            Text(f"{self.tblData.txCount:,.0f}")
+            Text(f"{self.txCount:,.0f}")
         )
     
         #Metrics / Events
@@ -444,47 +450,46 @@ class dashboard(object):
         self.tblMetricEvents.add_column("", justify='right', style=colValStyle)
         self.tblMetricEvents.add_row(
             Text(f"{'Difficulty Epoch'}"),
-            Text(f"{self.tblData.diffEpoch:.0f}"),
+            Text(f"{self.diffEpoch:.0f}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Block time, Prev Epoch'}"),
-            Text(f"{self.tblData.avg_2016_blockTime}"),
+            Text(f"{self.avg_2016_blockTime}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Block time, Diff. Epoch'}"),
-            Text(f"{self.tblData.avgEpochBlockTime}"),
+            Text(f"{self.avgEpochBlockTime}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Blocks to Retarget'}"),
-            Text(f"{self.tblData.epochBlocksRemain:,.0f}"),
+            Text(f"{self.epochBlocksRemain:,.0f}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Retarget Date'}"),
-            Text(f"{self.tblData.RetargetDate}"),
+            Text(f"{self.RetargetDate}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Estimated Change'}"),
-            Text(f"{self.tblData.estDiffChange:.01f}%"), 
+            Text(f"{self.estDiffChange:.01f}%"), 
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Retarget in nBits'}"),
-            Text(f"{self.tblData.bnNew:.0f}"),
+            Text(f"{self.bnNew:.0f}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Blocks to Halving'}"),
-            Text(f"{self.tblData.nBlocksToHalving:,.0f}"),
+            Text(f"{self.nBlocksToHalving:,.0f}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Estimate Halving on'}"),
-            Text(f"{self.tblData.halvingDate}"),
+            Text(f"{self.halvingDate}"),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Subsidy Epoch'}"),
-            Text(f"{self.tblData.subsidyEpoch}")  
+            Text(f"{self.subsidyEpoch}")  
         )
     
         return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents 
-
 
 
 
