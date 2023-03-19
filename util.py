@@ -35,7 +35,9 @@ PrevBTCPrice = None
 PrevGLDPrice = None
 PrevBlockHeight = None
 
+# Initialize queue to use as a buffer bewtween dashboard and RPC calls
 q = Queue(maxsize = 0)
+
 
 class GetAssetPrices(object):  
     def __new__(cls, *args, **kwargs):
@@ -47,7 +49,7 @@ class GetAssetPrices(object):
         self.GoldForexURL = GoldForexURL   
         self.getBTCURL =  getBTCURL
         
-    def getBTCUSD(self):
+    def getBTCUSD(self) -> float:
         global PrevBTCPrice
         
         try:
@@ -56,7 +58,7 @@ class GetAssetPrices(object):
         except:
             return PrevBTCPrice
     
-    def getGLDUSD(self):
+    def getGLDUSD(self) -> float:
         global PrevGLDPrice
         
         try:
@@ -66,7 +68,7 @@ class GetAssetPrices(object):
         except:
             return PrevGLDPrice
     
-    def _call(self, url):
+    def _call(self, url) -> str:
         self = requests.get(url)
         url_json = self.text
         return json.loads(url_json)              
