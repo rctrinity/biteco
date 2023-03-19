@@ -20,10 +20,10 @@ dashBox = box.HORIZONTALS
 tblBrdrStyle = 'dim bold deep_sky_blue1'
 tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
-colValStyle = 'bright_white'
+colValStyle = 'white'
+colValUpStyle = 'dim bold green'
+colValDnStyle = 'dim bold red'
 tblwidth = 45
-
-# Initializing a queue 
 
 
 class generateDataForTables(object):
@@ -157,10 +157,12 @@ class generateDataForTables(object):
     
     
     def marketCap(self) -> float:
-        return ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
+        self = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
+        return self
     
     def blocksToHalving(self) -> int:
-        return int(HALVING_BLOCKS - (self.MAX_HEIGHT % HALVING_BLOCKS))
+        self = int(HALVING_BLOCKS - (self.MAX_HEIGHT % HALVING_BLOCKS))
+        return self
         
     def AvgBlockTimePrevEpoch(self) -> str:
         start_2016_block = int((self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval)) - self.nInterval)
@@ -168,7 +170,8 @@ class generateDataForTables(object):
         try:
             startBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(start_2016_block))
             endBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(end_2016_block)) 
-            return str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
+            self = str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
+            return self
         except:
             return '0:00' 
         
@@ -205,15 +208,15 @@ class generateDataForTables(object):
         blocksremain = int(self.nInterval - (self.MAX_HEIGHT % self.nInterval))
         secsToAdd = (blocksremain  / self.nBlocksHour) * self.nSecsHour
         retargetdate = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
-        
         return diffchange, blocksremain, retargetdate, bnnew
         
         
     def HalvingDate(self) -> str:
         secsToAdd = (self.nBlocksToHalving / self.nBlocksHour) * self.nSecsHour
+        self = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
+        return self
         
-        return datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
-        
+
 class dashboard(object):
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
@@ -240,8 +243,7 @@ class dashboard(object):
             Layout(name="bestblock"),
             Layout(name="network"),
             Layout(name="metricevents")
-            )
-       
+            ) 
     
         self.layout["market"].size = 6
         self.layout["gold"].size = 5
@@ -250,9 +252,7 @@ class dashboard(object):
         self.layout["bestblock"].size = 9
         self.layout["network"].size = 14
         self.layout["metricevents"].size = 20
-        
         self = self.updateLayout()
-        
         return self
         
         
@@ -272,8 +272,11 @@ class dashboard(object):
     
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice, PrevBlockHeight, q
-    
-        self = q.get()   # Grab from our queue, first in, first out method
+        
+        try:
+            self = q.get()   # Grab from our queue, first in, first out method
+        except q.Empty:
+            pass  # Our queue should never be empty
     
         if PrevBTCPrice == None:
             PrevBTCPrice = self.BTCPrice      
@@ -285,12 +288,12 @@ class dashboard(object):
         if int(round(self.BTCPrice)) > int(round(PrevBTCPrice)):
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.BTCPrice:,.0f}", style='dim bold green')
+            Text(f"${self.BTCPrice:,.0f}", style=colValUpStyle)
             )
         elif int(round(self.BTCPrice)) < int(round(PrevBTCPrice)):
             self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.BTCPrice:,.0f}", style='dim bold red')  
+            Text(f"${self.BTCPrice:,.0f}", style=colValDnStyle)  
             )
         else:
             self.tblMarket.add_row(
@@ -364,7 +367,7 @@ class dashboard(object):
         if self.MAX_HEIGHT > PrevBlockHeight:  
             self.tblBestBlock.add_row(
                 Text(f"{'Block Height'}"),
-                Text(f"{self.MAX_HEIGHT:,.0f}", style='dim bold green'),
+                Text(f"{self.MAX_HEIGHT:,.0f}", style=colValUpStyle),
                 )
         else:
             self.tblBestBlock.add_row(
@@ -490,6 +493,5 @@ class dashboard(object):
         )
     
         return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents 
-
 
 
