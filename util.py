@@ -38,6 +38,9 @@ PrevBlockHeight = None
 q = Queue(maxsize = 0)
 
 class GetAssetPrices(object):  
+    def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+        
     def __init__(self, GoldForexURL="https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD",
                  getBTCURL="https://api.coindesk.com/v1/bpi/currentprice.json"):
         
@@ -48,8 +51,8 @@ class GetAssetPrices(object):
         global PrevBTCPrice
         
         try:
-            r = self._call(self.getBTCURL)
-            return r['bpi']['USD']['rate_float']
+            self = self._call(self.getBTCURL)
+            return self['bpi']['USD']['rate_float']
         except:
             return PrevBTCPrice
     
@@ -57,16 +60,16 @@ class GetAssetPrices(object):
         global PrevGLDPrice
         
         try:
-            r = self._call(self.GoldForexURL)[1]
-            prevGLDPrice = r['spreadProfilePrices'][0]['ask']
-            return r['spreadProfilePrices'][0]['ask']
+            self = self._call(self.GoldForexURL)[1]
+            prevGLDPrice = self['spreadProfilePrices'][0]['ask']
+            return self['spreadProfilePrices'][0]['ask']
         except:
             return PrevGLDPrice
     
     def _call(self, url):
         self = requests.get(url)
         url_json = self.text
-        return json.loads(url_json)       
+        return json.loads(url_json)              
         
 
 # Clear screen between refresh
