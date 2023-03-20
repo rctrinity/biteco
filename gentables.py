@@ -154,7 +154,8 @@ class generateDataForTables(object):
     
     
     def marketCap(self) -> float:
-        return ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
+        self = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
+        return self
     
     def blocksToHalving(self) -> int:
         return int(HALVING_BLOCKS - (self.MAX_HEIGHT % HALVING_BLOCKS))
@@ -165,7 +166,8 @@ class generateDataForTables(object):
         try:
             startBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(start_2016_block))
             endBlockTime = self.proxy.getblockheader(self.proxy.getblockhash(end_2016_block)) 
-            return str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
+            self = str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
+            return self
         except:
             return '0:00' 
         
@@ -174,15 +176,15 @@ class generateDataForTables(object):
         epochStartBlock = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
         
         try:
-            epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock))  
+            epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock)) 
             return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
         except:
             return '0:00', 0
     
     
     def bestBlockAge(self) -> str:
-        r = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
-        return r
+        self = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
+        return self
         
     def Retarget(self) -> tuple[float, int, str, int]:
         nEpochTargetTimespan = int(( self.MAX_HEIGHT % self.nInterval ) * self.nTargetSpacing)
@@ -208,8 +210,8 @@ class generateDataForTables(object):
         
     def HalvingDate(self) -> str:
         secsToAdd = (self.nBlocksToHalving / self.nBlocksHour) * self.nSecsHour
-        
-        return datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
+        self = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
+        return self
         
 class dashboard(object):
     def __init__(self,
@@ -260,13 +262,13 @@ class dashboard(object):
         self.layout["bestblock"].update(self.tblBestBlock)
         self.layout["network"].update(self.tblNetwork)
         self.layout["metricevents"].update(self.tblMetricEvents)
-        
-        return Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65)  
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65) 
+        return self 
 
     
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice, PrevBlockHeight, q
-    
+        
         try:
             self.tblData = q.get()   # Grab from our queue, first in, first out method
         except q.Empty:
@@ -492,6 +494,5 @@ class dashboard(object):
 __all__ = ('generateDataForTables'
            ,'dashboard'
 )
-
 
 
