@@ -92,3 +92,9 @@ def blockSubsidy(MAX_HEIGHT):
     bs /= COIN
     return bs 
 
+
+__all__ = ('GetAssetPrices'
+           ,'clear'
+           ,'blockSubsidy'
+)
+
