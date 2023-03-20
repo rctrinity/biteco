@@ -267,7 +267,10 @@ class dashboard(object):
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice, PrevBlockHeight, q
     
-        self.tblData = q.get()   # Grab from our queue, first in, first out method
+        try:
+            self.tblData = q.get()   # Grab from our queue, first in, first out method
+        except q.Empty:
+            pass   # We should never have an empty queue
     
         if PrevBTCPrice == None:
             PrevBTCPrice = self.tblData.BTCPrice      
