@@ -14,7 +14,7 @@ Rich library  https://github.com/Textualize/rich
  ## **Install**:    
  1. clone biteco
  2. change to biteco folder
- 3. run setup.py install - This will install the required library dependencies. (Rich and python-bitcoinlib)
+ 3. run python3 setup.py install - This will install the required library dependencies. (Rich and python-bitcoinlib)
  4. Install libsssl-dev -> sudo apt-get install libssl-dev on linux or brew install openssl on mac-os. Needed for bitcoinlib.   
  7. To run -> biteco   
  
