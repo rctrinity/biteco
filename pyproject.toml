@@ -1,7 +1,7 @@
 [build-system]
 requires = ["setuptools"]
 
-[project]
+[biteco]
 dependencies = [
     "rich == 13.3.2",
     "python-bitcoinlib == 0.12.0",
