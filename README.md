@@ -14,13 +14,13 @@ Rich library  https://github.com/Textualize/rich
  ## **Install**:    
  1. clone biteco
  2. change to biteco folder
- 3. clone python-bitcoinlib. You want the bitcoin folder inside the same child folder (biteco)   
+ 3. run setup.py install - This will install the required library dependencies. (Rich and python-bitcoinlib)
  4. Install libsssl-dev -> sudo apt-get install libssl-dev on linux or brew install openssl on mac-os. Needed for bitcoinlib.   
- 5. Install Rich Library   
- 6. From parent biteco folder, run Python setup.py install
  7. To run -> biteco   
  
- The bitcoinlib rpc module uses your bitcoin.conf file to authenticate with the node.   
+ The bitcoinlib rpc module uses your bitcoin.conf file to authenticate with the node. 
+ I have made setting up biteco a bit easier with the setup module.
+ 
  
  Below is a screenshot of the dashboard.   
  
