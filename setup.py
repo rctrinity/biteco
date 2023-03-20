@@ -10,7 +10,7 @@ setuptools.setup(
     packages=['biteco'],
     install_requires=['rich ==13.3.2',
                         'python-bitcoinlib == 0.12.0',
-                    ]
+                    ],
     entry_points={
         'console_scripts': ['biteco = biteco.biteco:main'],
     },
