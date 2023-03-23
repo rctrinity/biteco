@@ -60,11 +60,15 @@ class GetAssetPrices(object):
     
     def getGLDUSD(self) -> float:
         global PrevGLDPrice
-        
+         
         try:
-            self = self._call(self.GoldForexURL)[1]
-            prevGLDPrice = self['spreadProfilePrices'][0]['ask']
-            return self['spreadProfilePrices'][0]['ask']
+            gold_price_list = self._call(self.GoldForexURL)
+            for i in gold_price_list:
+                if i['topo']['platform'] == 'AT':
+                    for j in i['spreadProfilePrices']:
+                        if j['spreadProfile'] == 'standard':
+                            prevGLDPrice = j['ask']
+                            return j['ask']
         except:
             return PrevGLDPrice
     
