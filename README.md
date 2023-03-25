@@ -15,7 +15,8 @@ Rich library  https://github.com/Textualize/rich
  1. clone biteco -> git clone https://github.com/rctrinity/biteco
  2. python3 -m pip install -e biteco/
  4. Install libsssl-dev -> sudo apt-get install libssl-dev on linux or brew install openssl on mac-os. Needed for bitcoinlib.   
- 5. To run -> biteco   
+ 5. To run -> cd biteco
+ 6. biteco   
  
  The bitcoinlib rpc module uses your bitcoin.conf file to authenticate with the node. 
  I have made setting up biteco a bit easier with the setup module.
