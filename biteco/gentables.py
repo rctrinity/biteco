@@ -10,8 +10,8 @@ import datetime, time
 from time import sleep
 import math
 from typing import Tuple
-import util
-from util import GetAssetPrices, PrevBTCPrice, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
+import biteco.util
+from biteco.util import GetAssetPrices, PrevBTCPrice, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
 COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION, q
 
 # Dashboard attributes
