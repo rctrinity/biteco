@@ -22,6 +22,6 @@ setup(
                         'python-bitcoinlib == 0.12.0',
                     ],
     entry_points={
-        'console_scripts': ['biteco = biteco.biteco:main', 'gentables = biteco.gentables', 'util = biteco.util'],
+        'console_scripts': ['biteco = biteco.biteco:main'],
     },
 )
