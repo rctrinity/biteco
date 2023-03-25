@@ -22,8 +22,8 @@ from time import sleep
 from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
-from gentables import dashboard, generateDataForTables
-from util import clear, q
+from biteco.gentables import dashboard, generateDataForTables
+from biteco.util import clear, q
 from rich import print, pretty
 
 
