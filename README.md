@@ -11,6 +11,8 @@ Rich library  https://github.com/Textualize/rich
  python-bitcoinlib by Peter Todd ( https://github.com/petertodd/python-bitcoinlib )    
      git clone https://github.com/petertodd/python-bitcoinlib.git    
          
+ The below install will install all the required libraries above.
+ 
  ## **Install**:    
  1. From home folder, clone biteco -> git clone https://github.com/rctrinity/biteco
  2. python3 -m pip install -e biteco/  
