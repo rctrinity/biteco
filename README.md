@@ -20,6 +20,7 @@ Rich library  https://github.com/Textualize/rich
  4. Optional only: Add rpcworkqueue=48 (default is 16) in your bitcoin.conf
  
  To stop biteco, touch ~/biteco/biteco/kill_biteco
+ 
  kill_biteco in same folder as biteco.py sends a kill trigger to the app. biteco will remove kill_biteco before exiting.
  
  The bitcoinlib rpc module uses your bitcoin.conf file to authenticate with the node. 
