@@ -36,7 +36,7 @@ PrevGLDPrice = None
 PrevBlockHeight = None
 
 # Initialize queue to use as a buffer bewtween dashboard and RPC calls
-q = Queue(maxsize = 0)
+q = Queue(maxsize = 3)
 
 
 class GetAssetPrices(object):  
