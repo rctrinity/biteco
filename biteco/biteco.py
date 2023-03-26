@@ -1,6 +1,6 @@
 '''
  biteco.py
- v0.1.1 Stable
+ v0.1.2 Stable
  Capture Market, Network, Gold, Metrics, and upcoming Events (difficulty and halving)  
  Copyright (c) 2023 Farley
  ___             _       _  _ 
@@ -25,36 +25,39 @@ from rich.console import Console as console
 from biteco.gentables import dashboard, generateDataForTables
 from biteco.util import clear, q
 from rich import print, pretty
+import sys
+import os
+import os.path
 
-
-def liveUpdate():
-    global q
-    q.put(generateDataForTables())
+class KillBiteco(Exception):
+    pass
 
           
 def main():
-    
+    global q
     clear() 
     print("[bright_black]Initializing dashboard[white]...")
     Dashboard = dashboard()
-    
-    # Pre-fill our Queue
-    for i in range(3):
-        liveUpdate()
-        sleep(1)
     
     try:        
         with Live(Align.center(Dashboard.generateLayout(),vertical="middle"), screen=True, console=console()) as live_table:
             while True:
                 try:
-                    liveUpdate()
-                    sleep(60*0.02) 
+                    here = os.path.abspath(os.path.dirname(__file__))
+                    file_exists = os.path.exists(os.path.join(here, 'kill_biteco'))
+                    if file_exists:
+                        os.remove(os.path.join(here, 'kill_biteco'))
+                        raise KillBiteco
+                    
                     live_table.update(Align.center(Dashboard.updateLayout(), vertical="middle"), refresh=True)
                 except KeyboardInterrupt:
                     raise
 
     except (KeyboardInterrupt, SystemExit):
         print(f"{'Shutting down: Keyboard Interrupt.'}")
+    
+    except (KillBiteco, SystemExit):
+        print('Shutting down: kill_biteco found.')
           
 
 if __name__ == '__main__':
