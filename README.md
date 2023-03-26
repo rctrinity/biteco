@@ -5,6 +5,8 @@
    
 ## **Requirements**:   
 
+Must be running your own Bitcoin node. :-)
+
 Rich library  https://github.com/Textualize/rich    
      python -m pip install rich       
      
