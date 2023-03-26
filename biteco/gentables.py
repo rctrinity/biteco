@@ -23,7 +23,29 @@ colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
 tblwidth = 45
 
-# Initializing a queue 
+def addToQueue():
+    global q
+    try:
+        t = generateDataForTables()
+        if t.proxy_error:
+            pass
+        else:
+            q.put(t)
+    
+    except KeyboardInterrupt:
+        raise
+
+    except:
+        sleep(5)
+        try:
+            t = generateDataForTables()
+            if t.proxy_error:
+                pass
+            else:
+                q.put(t)
+            
+        except:
+            pass
 
 
 class generateDataForTables(object):
@@ -76,82 +98,90 @@ class generateDataForTables(object):
                  nInterval=0, 
                  EpochHead = 0, 
                  bestBlockTimeUnix=0, 
-                 bestBlockHeader = None): 
+                 bestBlockHeader = None,
+                 proxy_error = False): 
         global PrevBlockHeight
+        self.proxy_error = proxy_error
         self.proxy=proxy
         if self.proxy == None:
             self.proxy=rpc.Proxy()
-
-        getAssetPrices = GetAssetPrices()
-        self.nTargetTimespan = 14 * 24 * 60 * 60                     
-        self.nTargetSpacing = 10 * 60                                
-        self.nSecsHour = 60 * 60                                     
-        self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
-        self.nInterval = self.nTargetTimespan / self.nTargetSpacing
-        # Proxy calls
-        self.bestBlockHash = self.proxy.getbestblockhash()
-        self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
-        currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
-        chainTxStats = self.proxy.call('getchaintxstats')  
-        getBlockChainInfo = self.proxy.call('getblockchaininfo')
-        getNetworkInfo = self.proxy.call('getnetworkinfo') 
-        self.Connections = getNetworkInfo['connections'] 
-        self.ConnectionsIn = getNetworkInfo['connections_in']
-        self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
-        self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
-        self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
-        self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH        
-        
-        self.bestNonce = self.bestBlockHeader.nNonce
-        self.difficulty = self.bestBlockHeader.difficulty/TRILLION
-        self.targetBits = self.bestBlockHeader.nBits
-        self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
-        self.coinsMined = float(currentInfo['total_amount'])
-        self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
-        
-        self.BTCPrice = getAssetPrices.getBTCUSD()
-        if self.BTCPrice == None:
-            self.BTCPrice = 0
-        self.GLDPrice = getAssetPrices.getGLDUSD()
-        if self.GLDPrice == None:
-            self.GLDPrice = 0
         try:
-            self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
-        except:
-            self.BTCPricedInGold = 0
-        try:
-            self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
-        except:
-            self.BTCvsGOLDMarketCap = 0
-        
-        self.totalTXs = chainTxStats['txcount']
-        self.txRatePerSec = chainTxStats['txrate']
-        self.txCount = chainTxStats['window_tx_count']         
-        self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
-        self.MAX_HEIGHT = getBlockChainInfo['blocks']
-        if PrevBlockHeight == None:
-            PrevBlockHeight = self.MAX_HEIGHT
-        self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
-        self.verification = getBlockChainInfo['verificationprogress'] * 100        
-        self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
-        self.BlockSubsidy = blockSubsidy(self.MAX_HEIGHT)
-        self.blockSubsidyValue = self.BlockSubsidy * self.BTCPrice
-        self.subsidyEpoch = 1 +(self.MAX_HEIGHT // HALVING_BLOCKS)                        
-        self.BestBlockAge = self.bestBlockAge()    
-        self.avg_2016_blockTime = self.AvgBlockTimePrevEpoch()
-        self.avgEpochBlockTime, self.EpochHead = self.AvgBlockTimeEpoch()       
-        self.nBlocksToHalving = self.blocksToHalving()
-        self.halvingDate = self.HalvingDate() 
-        self.PctIssued = ((self.coinsMined + self.UNSPENDABLE) / MAX_SUPPLY) * 100
-        self.IssuanceRemaining = MAX_SUPPLY - self.coinsMined - self.UNSPENDABLE
-        try:
-            self.satusd = (1/(self.BTCPrice * CONVERT_TO_SATS))
-        except:
-            self.satusd = 0    
-        self.MarketCap = self.marketCap()
-        
-        self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
+            getAssetPrices = GetAssetPrices()
     
+            self.nTargetTimespan = 14 * 24 * 60 * 60                     
+            self.nTargetSpacing = 10 * 60                                
+            self.nSecsHour = 60 * 60                                     
+            self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
+            self.nInterval = self.nTargetTimespan / self.nTargetSpacing
+        
+            # Proxy calls
+            self.bestBlockHash = self.proxy.getbestblockhash()
+            self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
+            currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
+            chainTxStats = self.proxy.call('getchaintxstats')  
+            getBlockChainInfo = self.proxy.call('getblockchaininfo')
+            getNetworkInfo = self.proxy.call('getnetworkinfo') 
+            self.Connections = getNetworkInfo['connections'] 
+            self.ConnectionsIn = getNetworkInfo['connections_in']
+            self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
+            self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
+            self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
+            self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH 
+
+        
+            self.bestNonce = self.bestBlockHeader.nNonce
+            self.difficulty = self.bestBlockHeader.difficulty/TRILLION
+            self.targetBits = self.bestBlockHeader.nBits
+            self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
+            self.coinsMined = float(currentInfo['total_amount'])
+            self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
+        
+            self.BTCPrice = getAssetPrices.getBTCUSD()
+            if self.BTCPrice == None:
+                self.BTCPrice = 0
+            self.GLDPrice = getAssetPrices.getGLDUSD()
+            if self.GLDPrice == None:
+                self.GLDPrice = 0
+            try:
+                self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
+            except:
+                self.BTCPricedInGold = 0
+            try:
+                self.BTCvsGOLDMarketCap = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / (self.GLDPrice * GOLD_OZ_ABOVE_GROUND) * 100
+            except:
+                self.BTCvsGOLDMarketCap = 0
+        
+            self.totalTXs = chainTxStats['txcount']
+            self.txRatePerSec = chainTxStats['txrate']
+            self.txCount = chainTxStats['window_tx_count']         
+            self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
+            self.MAX_HEIGHT = getBlockChainInfo['blocks']
+            if PrevBlockHeight == None:
+                PrevBlockHeight = self.MAX_HEIGHT
+            self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
+            self.verification = getBlockChainInfo['verificationprogress'] * 100        
+            self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
+            self.BlockSubsidy = blockSubsidy(self.MAX_HEIGHT)
+            self.blockSubsidyValue = self.BlockSubsidy * self.BTCPrice
+            self.subsidyEpoch = 1 +(self.MAX_HEIGHT // HALVING_BLOCKS)                        
+            self.BestBlockAge = self.bestBlockAge()    
+            self.avg_2016_blockTime = self.AvgBlockTimePrevEpoch()
+            self.avgEpochBlockTime, self.EpochHead = self.AvgBlockTimeEpoch()       
+            self.nBlocksToHalving = self.blocksToHalving()
+            self.halvingDate = self.HalvingDate() 
+            self.PctIssued = ((self.coinsMined + self.UNSPENDABLE) / MAX_SUPPLY) * 100
+            self.IssuanceRemaining = MAX_SUPPLY - self.coinsMined - self.UNSPENDABLE
+            try:
+                self.satusd = (1/(self.BTCPrice * CONVERT_TO_SATS))
+            except:
+                self.satusd = 0    
+            self.MarketCap = self.marketCap()
+        
+            self.estDiffChange, self.epochBlocksRemain, self.RetargetDate, self.bnNew = self.Retarget()
+        
+        except:
+            self.proxy_error = True 
+
     
     def marketCap(self) -> float:
         self = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
@@ -169,6 +199,7 @@ class generateDataForTables(object):
             self = str(datetime.timedelta(seconds=(round( (endBlockTime.nTime - startBlockTime.nTime) / self.nInterval,0)))).lstrip("0:")
             return self
         except:
+            self.proxy_error = True
             return '0:00' 
         
     
@@ -179,6 +210,7 @@ class generateDataForTables(object):
             epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock)) 
             return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
         except:
+            self.proxy_error = True
             return '0:00', 0
     
     
@@ -251,6 +283,7 @@ class dashboard(object):
         
         
     def updateLayout(self) -> Panel:
+        addToQueue()
         self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents = self.generateTable()
         
         self.layout["market"].update(self.tblMarket)
@@ -267,10 +300,12 @@ class dashboard(object):
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
         global PrevBTCPrice, PrevBlockHeight, q
         
-        try:
+        if not q.empty():
             self = q.get()   # Grab from our queue, first in, first out method
-        except q.Empty:
-            pass   # We should never have an empty queue
+        else:
+            while not q.full():
+                addToQueue()   
+            self = q.get()
     
         if PrevBTCPrice == None:
             PrevBTCPrice = self.BTCPrice      
@@ -492,6 +527,7 @@ class dashboard(object):
 __all__ = ('generateDataForTables'
            ,'dashboard'
 )
+
 
 
 
