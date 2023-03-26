@@ -11,7 +11,7 @@ setup(
     version=__version__,
     description='A terminal dashboard with live updates, displaying bitcoin economic metrics. Inspired by Clark Moody Bitcoin Dashboard.',
     long_description=README,
-        long_description_conten_type='text/markdown',
+        long_description_content_type='text/markdown',
         classifers=[
             "Programming Language :: Python",
             "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
@@ -25,3 +25,4 @@ setup(
         'console_scripts': ['biteco = biteco.biteco:main'],
     },
 )
+
