@@ -49,7 +49,7 @@ def addToQueue():
 
 
 class generateDataForTables(object):
-     def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
     
     def __init__(self, 
@@ -189,10 +189,10 @@ class generateDataForTables(object):
     def marketCap(self) -> float:
         self = ((self.coinsMined + self.UNSPENDABLE) * self.BTCPrice) / BILLION
         return self
-    
+
     def blocksToHalving(self) -> int:
         return int(HALVING_BLOCKS - (self.MAX_HEIGHT % HALVING_BLOCKS))
-        
+    
     def AvgBlockTimePrevEpoch(self) -> str:
         start_2016_block = int((self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval)) - self.nInterval)
         end_2016_block = int((self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))-1)
@@ -204,23 +204,23 @@ class generateDataForTables(object):
         except:
             self.proxy_error = True
             return '0:00' 
-        
     
+
     def AvgBlockTimeEpoch(self) -> str:
         epochStartBlock = int(self.MAX_HEIGHT - (self.MAX_HEIGHT % self.nInterval))
-        
+    
         try:
             epochHead = self.proxy.getblockheader(self.proxy.getblockhash(epochStartBlock)) 
             return str(datetime.timedelta(seconds=(round( (self.bestBlockHeader.nTime - epochHead.nTime) / int(self.MAX_HEIGHT % self.nInterval),0)))).lstrip("0:"), epochHead
         except:
             self.proxy_error = True
             return '0:00', 0
-    
-    
+
+
     def bestBlockAge(self) -> str:
         self = str(datetime.timedelta(seconds=(round(time.mktime(datetime.datetime.utcnow().timetuple()) - self.bestBlockTimeUnix, 0)))).lstrip("0:")
         return self
-        
+    
     def Retarget(self) -> tuple[float, int, str, int]:
         nEpochTargetTimespan = int(( self.MAX_HEIGHT % self.nInterval ) * self.nTargetSpacing)
         nEpochActualTimespan = int(self.bestBlockHeader.nTime - self.EpochHead.nTime)
@@ -229,27 +229,27 @@ class generateDataForTables(object):
             nEpochActualTimespan = nEpochTargetTimespan/4
         if (nEpochActualTimespan > nEpochTargetTimespan*4):
             nEpochActualTimespan = nEpochTargetTimespan*4
-    
+
         bnnew = uint256_from_compact(self.bestBlockHeader.nBits)
         bnnew *= nEpochActualTimespan
         bnnew //= nEpochTargetTimespan
         bnnew = compact_from_uint256(bnnew)
-     
+ 
         diffchange = (1-(nEpochActualTimespan / nEpochTargetTimespan)) * 100
         blocksremain = int(self.nInterval - (self.MAX_HEIGHT % self.nInterval))
         secsToAdd = (blocksremain  / self.nBlocksHour) * self.nSecsHour
         retargetdate = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
-        
+    
         return diffchange, blocksremain, retargetdate, bnnew
-        
-        
+    
+    
     def HalvingDate(self) -> str:
         secsToAdd = (self.nBlocksToHalving / self.nBlocksHour) * self.nSecsHour
         self = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
         return self
         
 class dashboard(object):
-     def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
     
     def __init__(self,
@@ -533,6 +533,7 @@ class dashboard(object):
 __all__ = ('generateDataForTables'
            ,'dashboard'
 )
+
 
 
 
