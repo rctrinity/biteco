@@ -22,9 +22,9 @@ from time import sleep
 from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
-from biteco.gentables import dashboard, generateDataForTables
-from biteco.util import clear, q
-from rich import print, pretty
+from biteco.gentables import dashboard
+from biteco.util import clear
+from rich import print
 import sys
 import os
 import os.path
@@ -34,7 +34,7 @@ class KillBiteco(Exception):
 
           
 def main():
-    global q
+ 
     clear() 
     print("[bright_black]Initializing dashboard[white]...")
     Dashboard = dashboard()
