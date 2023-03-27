@@ -49,6 +49,9 @@ def addToQueue():
 
 
 class generateDataForTables(object):
+     def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+    
     def __init__(self, 
                  proxy=None, 
                  nBlocksToHalving=0, 
@@ -246,6 +249,9 @@ class generateDataForTables(object):
         return self
         
 class dashboard(object):
+     def __new__(cls, *args, **kwargs):
+        return super().__new__(cls)
+    
     def __init__(self,
                 layout=None,
                 tblData=None,
