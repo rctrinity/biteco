@@ -336,7 +336,8 @@ class dashboard(object):
             Text(f"${self.BTCPrice:,.0f}", style=colValStyle)
             )
     
-        PrevBTCPrice = self.BTCPrice
+        if float(self.BTCPrice) > 0:
+            PrevBTCPrice = self.BTCPrice
     
         self.tblMarket.add_row(
             Text(f"{'Sats per Dollar'}"),
