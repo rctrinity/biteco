@@ -103,7 +103,7 @@ class generateDataForTables(object):
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None,
                  proxy_error = False): 
-        global PrevBlockHeight
+        global PrevBlockHeight, PrevBTCPrice, PrevGLDPrice
         self.proxy_error = proxy_error
         self.proxy=proxy
         if self.proxy == None:
@@ -141,10 +141,10 @@ class generateDataForTables(object):
         
             self.BTCPrice = getAssetPrices.getBTCUSD()
             if self.BTCPrice == None:
-                self.BTCPrice = 0
+                self.BTCPrice = max(PrevBTCPrice,0)
             self.GLDPrice = getAssetPrices.getGLDUSD()
             if self.GLDPrice == None:
-                self.GLDPrice = 0
+                self.GLDPrice = max(PrevGLDPrice,0)
             try:
                 self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
             except:
