@@ -43,17 +43,22 @@ class GetAssetPrices(object):
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
         
-    def __init__(self, GoldForexURL="https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD",
-                 getBTCURL="https://api.coindesk.com/v1/bpi/currentprice.json"):
+    def __init__(self, GoldForexURL="https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/XAU/USD"
+                      ,BitcoinURL="https://api.coindesk.com/v1/bpi/currentprice.json"
+                      ,Bitcoin_P=None
+                      ,Gold_P=None):
         
         self.GoldForexURL = GoldForexURL   
-        self.getBTCURL =  getBTCURL
+        self.BitcoinURL =  BitcoinURL
+        self.Bitcoin_P = self.getBTCUSD()
+        self.Gold_P = self.getGLDUSD()
         
     def getBTCUSD(self) -> float:
         
         try:
-            self = self._call(self.getBTCURL)
-            return self['bpi']['USD']['rate_float']
+            self = self._call(self.BitcoinURL)
+            return float(self['bpi']['USD']['rate_float'])
+        
         except:
             return None
     
@@ -68,14 +73,18 @@ class GetAssetPrices(object):
                         if j['spreadProfile'] == 'standard':
                             if float(j['ask']) > 0:
                                 PrevGLDPrice = j['ask']
-                            return j['ask']
+                            return float(j['ask'])
+        
         except:
             return None
     
     def _call(self, url) -> str:
         self = requests.get(url)
         url_json = self.text
-        return json.loads(url_json)              
+        return json.loads(url_json)  
+
+    def __repr__(self):
+        return f'GetAssetPrices({self.Bitcoin_P},{self.Gold_P},"{self.BitcoinURL}", "{self.GoldForexURL}")'                     
         
 
 # Clear screen between refresh
