@@ -50,13 +50,12 @@ class GetAssetPrices(object):
         self.getBTCURL =  getBTCURL
         
     def getBTCUSD(self) -> float:
-        global PrevBTCPrice
         
         try:
             self = self._call(self.getBTCURL)
             return self['bpi']['USD']['rate_float']
         except:
-            return PrevBTCPrice
+            return None
     
     def getGLDUSD(self) -> float:
         global PrevGLDPrice
@@ -67,10 +66,11 @@ class GetAssetPrices(object):
                 if i['topo']['platform'] == 'AT':
                     for j in i['spreadProfilePrices']:
                         if j['spreadProfile'] == 'standard':
-                            prevGLDPrice = j['ask']
+                            if float(j['ask']) > 0:
+                                PrevGLDPrice = j['ask']
                             return j['ask']
         except:
-            return PrevGLDPrice
+            return None
     
     def _call(self, url) -> str:
         self = requests.get(url)
