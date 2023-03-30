@@ -18,7 +18,6 @@ Requires:
 This terminal dashboard was inspired by Clark Moody's Bitcoin dashboard: https://bitcoin.clark.moody/dashboard
 '''
 
-from time import sleep
 from rich.align import Align
 from rich.live import Live as Live
 from rich.console import Console as console
