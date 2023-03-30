@@ -139,10 +139,10 @@ class generateDataForTables(object):
             self.coinsMined = float(currentInfo['total_amount'])
             self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
         
-            self.BTCPrice = getAssetPrices.getBTCUSD()
+            self.BTCPrice = getAssetPrices.Bitcoin_P
             if self.BTCPrice == None:
                 self.BTCPrice = max(PrevBTCPrice,0)
-            self.GLDPrice = getAssetPrices.getGLDUSD()
+            self.GLDPrice = getAssetPrices.Gold_P
             if self.GLDPrice == None:
                 self.GLDPrice = max(PrevGLDPrice,0)
             try:
