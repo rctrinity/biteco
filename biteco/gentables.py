@@ -11,6 +11,7 @@ from time import sleep
 import math
 from typing import Tuple
 import biteco.util
+from biteco import __version__
 from biteco.util import GetAssetPrices, PrevBTCPrice, PrevMempoolTxs, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
 COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION, q
 
@@ -326,7 +327,7 @@ class dashboard(object):
         self.layout["right"]["network"].update(self.tblNetwork)
         self.layout["left"]["metricevents"].update(self.tblMetricEvents)
         self.layout["right"]["mempoolinfo"].update(self.tblMempoolInfo)
-        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=COPYRIGHT, style=pnlBrdrStyle, width=100, height=40, padding=(1,1)) 
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle='v'+__version__, style=pnlBrdrStyle, width=100, height=40, padding=(1,1)) 
         return self 
 
     
