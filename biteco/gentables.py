@@ -307,7 +307,7 @@ class dashboard(object):
         self.layout['left']["mining"].size = 5
         self.layout['right']["bestblock"].size = 9
         self.layout['right']["network"].size = 14
-        self.layout['left']["metricevents"].size = 20
+        self.layout['left']["metricevents"].size = 17
         self.layout['right']["mempoolinfo"].size = 7
         
         r = self.updateLayout()        
@@ -326,7 +326,7 @@ class dashboard(object):
         self.layout["right"]["network"].update(self.tblNetwork)
         self.layout["left"]["metricevents"].update(self.tblMetricEvents)
         self.layout["right"]["mempoolinfo"].update(self.tblMempoolInfo)
-        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=COPYRIGHT, style=pnlBrdrStyle, width=100, height=38, padding=(1,1)) 
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=COPYRIGHT, style=pnlBrdrStyle, width=100, height=40, padding=(1,1)) 
         return self 
 
     
