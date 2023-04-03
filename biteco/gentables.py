@@ -327,7 +327,7 @@ class dashboard(object):
         self.layout["right"]["network"].update(self.tblNetwork)
         self.layout["left"]["metricevents"].update(self.tblMetricEvents)
         self.layout["right"]["mempoolinfo"].update(self.tblMempoolInfo)
-        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle='v'+__version__, style=pnlBrdrStyle, width=100, height=40, padding=(1,1)) 
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle='v'+__version__, style=pnlBrdrStyle, width=96, height=40, padding=(1,1)) 
         return self 
 
     
