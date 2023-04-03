@@ -2,7 +2,11 @@
 
  Inspired by Clark Moody's online dashboard at https://bitcoin.clarkmoody.com/dashboard/   
  This python written module should replace bitcoin-cli internal getinfo if you are running a node full-time.   
-   
+
+ Version 0.2.0 released
+ - Added Mempool Information
+ - Split the table height in half to create 2 columns of tables
+
 ## **Requirements**:   
 
 Must be running your own Bitcoin node. :-)
@@ -31,6 +35,6 @@ Rich library  https://github.com/Textualize/rich
  
  Below is a screenshot of the dashboard.   
  
- 
-![Screenshot from 2023-03-26 08-31-42](https://user-images.githubusercontent.com/103879453/227779204-e0d26af7-1921-4f4a-bced-28a04c81de25.png)
+ ![Screenshot from 2023-04-02 21-14-07](https://user-images.githubusercontent.com/103879453/229398515-dfbd18b2-4572-4ea7-895c-471906a6d785.png)
+
 
