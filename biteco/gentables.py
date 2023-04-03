@@ -24,7 +24,7 @@ tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
 tblwidth = 45
-mempool_check_ctr = 3
+#mempool_check_ctr = 3
 
 def addToQueue():
     global q
@@ -142,12 +142,7 @@ class generateDataForTables(object):
             self.total_fee = float(mempoolinfo['total_fee'])
             self.mempool_minfee = mempoolinfo['mempoolminfee'] * COIN
             self.mempool_bytes = mempoolinfo['bytes']
-            if mempool_check_ctr == 3:
-                self.mempool_txs = mempoolinfo['size']
-                mempool_check_ctr = 0
-            else:
-                self.mempool_txs = PrevMempoolTxs
-                mempool_check_ctr += 1   
+            self.mempool_txs = mempoolinfo['size']
         
             self.bestNonce = self.bestBlockHeader.nNonce
             self.difficulty = self.bestBlockHeader.difficulty/TRILLION
@@ -158,10 +153,11 @@ class generateDataForTables(object):
         
             self.BTCPrice = getAssetPrices.Bitcoin_P
             if self.BTCPrice == None:
-                self.BTCPrice = max(PrevBTCPrice,0)
+                self.BTCPrice = max(PrevBTCPrice, 0)     # Work on this and Gold to show last good known price if waiting on server
+            self.GLDPrice = getAssetPrices.getGLDUSD()
             self.GLDPrice = getAssetPrices.Gold_P
             if self.GLDPrice == None:
-                self.GLDPrice = max(PrevGLDPrice,0)
+                self.GLDPrice = max(PrevGLDPrice, 0)
             try:
                 self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
             except:
@@ -363,9 +359,13 @@ class dashboard(object):
             Text(f"{'Price'}"),
             Text(f"${self.BTCPrice:,.0f}", style=colValStyle)
             )
+            
+        if float(self.BTCPrice) > 0:
+            PrevBTCPrice = self.BTCPrice
     
         if float(self.BTCPrice) > 0:
             PrevBTCPrice = self.BTCPrice
+
     
         self.tblMarket.add_row(
             Text(f"{'Sats per Dollar'}"),
@@ -593,7 +593,7 @@ class dashboard(object):
             Text(f"{self.mempool_bytes/1000000:,.1f} MB")
             )
 
-        if self.mempool_txs > 0 and mempool_check_ctr == 0:
+        if self.mempool_txs > 0:
             PrevMempoolTxs = self.mempool_txs
 
 
@@ -603,7 +603,6 @@ class dashboard(object):
 __all__ = ('generateDataForTables'
            ,'dashboard'
 )
-
 
 
 
