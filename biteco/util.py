@@ -1,12 +1,15 @@
 # Utilities
 
 import json, requests
+from os import system, name# Utilities
+
+import json, requests
 from os import system, name
 from queue import Queue
 
 # Package Info
 VERSION = 101
-SUB_VERSION = 'v0.1.3'
+SUB_VERSION = 'v0.2.0'
 SUB_SUB_VERSION = 'Stable'
 PACKAGE_NAME = 'Bitcoin Economics'
 COPYRIGHT = '© Farley'
@@ -34,6 +37,7 @@ GOLD_OZ_ABOVE_GROUND = OUNCES_IN_METRIC_TON * GOLD_SUPPLY_METRIC_TON
 PrevBTCPrice = None
 PrevGLDPrice = None
 PrevBlockHeight = None
+PrevMempoolTxs = None
 
 # Initialize queue to use as a buffer bewtween dashboard and RPC calls
 q = Queue(maxsize = 3)
@@ -54,37 +58,36 @@ class GetAssetPrices(object):
         self.Gold_P = self.getGLDUSD()
         
     def getBTCUSD(self) -> float:
-        
-        try:
-            self = self._call(self.BitcoinURL)
+        self = self._call(self.BitcoinURL)
+        if self != None:
             return float(self['bpi']['USD']['rate_float'])
-        
-        except:
+        else:
             return None
     
     def getGLDUSD(self) -> float:
         global PrevGLDPrice
-         
-        try:
-            gold_price_list = self._call(self.GoldForexURL)
-            for i in gold_price_list:
+        self = self._call(self.GoldForexURL)
+        if self != None:
+            for i in self:
                 if i['topo']['platform'] == 'AT':
                     for j in i['spreadProfilePrices']:
                         if j['spreadProfile'] == 'standard':
                             if float(j['ask']) > 0:
                                 PrevGLDPrice = j['ask']
                             return float(j['ask'])
-        
-        except:
+        else:
             return None
     
     def _call(self, url) -> str:
-        self = requests.get(url)
-        url_json = self.text
-        return json.loads(url_json)  
+        try:
+            self = requests.get(url,timeout=3)
+            url_json = self.text
+            return json.loads(url_json)  
+        except:
+            return None  
 
     def __repr__(self):
-        return f'GetAssetPrices({self.Bitcoin_P},{self.Gold_P},"{self.BitcoinURL}", "{self.GoldForexURL}")'                     
+        return f'GetAssetPrices({self.Bitcoin_P},{self.Gold_P},"{self.BitcoinURL}", "{self.GoldForexURL}")'             
         
 
 # Clear screen between refresh
@@ -125,5 +128,7 @@ __all__ = ('GetAssetPrices'
            ,'PrevGLDPrice'
            ,'PrevBlockHeight'
            ,'q'
+           ,'PrevMempoolTxs'
 )
+
 
