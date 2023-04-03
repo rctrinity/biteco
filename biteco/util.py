@@ -9,7 +9,7 @@ from queue import Queue
 
 # Package Info
 VERSION = 101
-SUB_VERSION = 'v0.2.0'
+SUB_VERSION = 'v0.2.1'
 SUB_SUB_VERSION = 'Stable'
 PACKAGE_NAME = 'Bitcoin Economics'
 COPYRIGHT = '© Farley'
