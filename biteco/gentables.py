@@ -593,7 +593,7 @@ class dashboard(object):
             Text(f"{self.mempool_bytes/1000000:,.1f} MB")
             )
 
-        if self.mempool_txs > 0:
+        if self.mempool_txs > 0 and mempool_check_ctr == 3:
             PrevMempoolTxs = self.mempool_txs
 
 
