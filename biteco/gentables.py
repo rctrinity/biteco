@@ -11,17 +11,19 @@ from time import sleep
 import math
 from typing import Tuple
 import biteco.util
-from biteco.util import GetAssetPrices, PrevBTCPrice, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
+from biteco.util import GetAssetPrices, PrevBTCPrice, PrevMempoolTxs, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
 COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION, q
 
 # Dashboard attributes
-panelBox = box.SIMPLE
+panelBox = box.SQUARE
 dashBox = box.HORIZONTALS
 tblBrdrStyle = 'dim bold deep_sky_blue1'
+pnlBrdrStyle = 'dim bold grey62'
 tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
 tblwidth = 45
+mempool_check_ctr = 3
 
 def addToQueue():
     global q
@@ -102,15 +104,20 @@ class generateDataForTables(object):
                  EpochHead = 0, 
                  bestBlockTimeUnix=0, 
                  bestBlockHeader = None,
+                 total_fee = 0,
+                 mempool_txs = 0,
+                 mempool_minfee = 0,
+                 mempool_bytes = 0,
                  proxy_error = False): 
-        global PrevBlockHeight, PrevBTCPrice, PrevGLDPrice
+        global PrevBlockHeight, PrevBTCPrice, PrevGLDPrice, mempool_check_ctr
         self.proxy_error = proxy_error
         self.proxy=proxy
         if self.proxy == None:
             self.proxy=rpc.Proxy()
-        try:
-            getAssetPrices = GetAssetPrices()
-    
+        
+        getAssetPrices = GetAssetPrices()
+        
+        try:    
             self.nTargetTimespan = 14 * 24 * 60 * 60                     
             self.nTargetSpacing = 10 * 60                                
             self.nSecsHour = 60 * 60                                     
@@ -130,7 +137,16 @@ class generateDataForTables(object):
             self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) >> 1) / EXAHASH    
             self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) << 1) / EXAHASH    
             self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(self.nInterval) // 14) / EXAHASH 
-
+            mempoolinfo = self.proxy.call('getmempoolinfo')
+            self.total_fee = float(mempoolinfo['total_fee'])
+            self.mempool_minfee = mempoolinfo['mempoolminfee'] * COIN
+            self.mempool_bytes = mempoolinfo['bytes']
+            if mempool_check_ctr == 3:
+                self.mempool_txs = mempoolinfo['size']
+                mempool_check_ctr = 0
+            else:
+                self.mempool_txs = PrevMempoolTxs
+                mempool_check_ctr += 1   
         
             self.bestNonce = self.bestBlockHeader.nNonce
             self.difficulty = self.bestBlockHeader.difficulty/TRILLION
@@ -261,28 +277,38 @@ class dashboard(object):
                 tblMining=None, 
                 tblBestBlock=None, 
                 tblNetwork=None, 
-                tblMetricEvents=None):
+                tblMetricEvents=None,
+                tblMempoolInfo=None):
         self.layout=layout
     
     def generateLayout(self) -> Panel:        
         self.layout = Layout()
-        self.layout.split_column(
+        
+        self.layout.split_row(
+            Layout(name='left'),
+            Layout(name='right')
+            )
+        self.layout['left'].split_column(
             Layout(name="market"),
             Layout(name="gold"),
             Layout(name="supply"),
             Layout(name="mining"),
-            Layout(name="bestblock"),
-            Layout(name="network"),
             Layout(name="metricevents")
             )
-          
-        self.layout["market"].size = 6
-        self.layout["gold"].size = 5
-        self.layout["supply"].size = 7
-        self.layout["mining"].size = 5
-        self.layout["bestblock"].size = 9
-        self.layout["network"].size = 14
-        self.layout["metricevents"].size = 20
+        self.layout['right'].split_column(
+            Layout(name="bestblock"),
+            Layout(name="network"),
+            Layout(name='mempoolinfo')
+            )
+        
+        self.layout['left']["market"].size = 6
+        self.layout['left']["gold"].size = 5
+        self.layout['left']["supply"].size = 7
+        self.layout['left']["mining"].size = 5
+        self.layout['right']["bestblock"].size = 9
+        self.layout['right']["network"].size = 14
+        self.layout['left']["metricevents"].size = 20
+        self.layout['right']["mempoolinfo"].size = 7
         
         r = self.updateLayout()        
         return r
@@ -290,21 +316,22 @@ class dashboard(object):
         
     def updateLayout(self) -> Panel:
         addToQueue()
-        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents = self.generateTable()
+        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo = self.generateTable()
         
-        self.layout["market"].update(self.tblMarket)
-        self.layout["gold"].update(self.tblGold)
-        self.layout["supply"].update(self.tblSupply)
-        self.layout["mining"].update(self.tblMining)
-        self.layout["bestblock"].update(self.tblBestBlock)
-        self.layout["network"].update(self.tblNetwork)
-        self.layout["metricevents"].update(self.tblMetricEvents)
-        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=None, width=50, height=65) 
+        self.layout["left"]["market"].update(self.tblMarket)
+        self.layout["left"]["gold"].update(self.tblGold)
+        self.layout["left"]["supply"].update(self.tblSupply)
+        self.layout["left"]["mining"].update(self.tblMining)
+        self.layout["right"]["bestblock"].update(self.tblBestBlock)
+        self.layout["right"]["network"].update(self.tblNetwork)
+        self.layout["left"]["metricevents"].update(self.tblMetricEvents)
+        self.layout["right"]["mempoolinfo"].update(self.tblMempoolInfo)
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle=COPYRIGHT, style=pnlBrdrStyle, width=100, height=38) 
         return self 
 
     
-    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table]:
-        global PrevBTCPrice, PrevBlockHeight, q
+    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table, Table]:
+        global PrevBTCPrice, PrevBlockHeight, q, PrevMempoolTxs, mempool_check_ctr
         
         if not q.empty():
             self = q.get()   # Grab from our queue, first in, first out method
@@ -483,7 +510,7 @@ class dashboard(object):
         )
     
         #Metrics / Events
-        self.tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, width = tblwidth, caption=COPYRIGHT, box=dashBox, 
+        self.tblMetricEvents = Table(title=' Metrics / Events', title_justify='left', show_header=False, show_footer=False, width = tblwidth,  box=dashBox, 
                                 highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
         self.tblMetricEvents.add_column("", style=colDescStyle)
         self.tblMetricEvents.add_column("", justify='right', style=colValStyle)
@@ -527,14 +554,54 @@ class dashboard(object):
             Text(f"{'  Subsidy Epoch'}"),
             Text(f"{self.subsidyEpoch}")  
         )
-    
-        return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents 
+
+        if PrevMempoolTxs == None:
+            PrevMempoolTxs = self.mempool_txs      
+        
+        #MempoolInfo
+        self.tblMempoolInfo = Table(title=' Mempool Info', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, 
+                                highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
+        self.tblMempoolInfo.add_column("", style=colDescStyle)
+        self.tblMempoolInfo.add_column("", justify='right', style=colValStyle)
+        if self.mempool_txs > PrevMempoolTxs:
+            self.tblMempoolInfo.add_row(
+                Text(f"{'Transactions'}"),
+                Text(f"{self.mempool_txs:,.0f}", style='dim bold green'),
+            )
+        elif self.mempool_txs < PrevMempoolTxs:
+                self.tblMempoolInfo.add_row(
+                Text(f"{'Transactions'}"),
+                Text(f"{self.mempool_txs:,.0f}", style='dim bold red'),
+            )
+        else:
+            self.tblMempoolInfo.add_row(
+                Text(f"{'Transactions'}"),
+                Text(f"{self.mempool_txs:,.0f}", style=colValStyle),
+            )
+        
+        self.tblMempoolInfo.add_row(
+            Text(f"{'Total Fee'}"),
+            Text(f"{self.total_fee:.2f} BTC"),
+            )
+        self.tblMempoolInfo.add_row(
+            Text(f"{'Minimum Fee, sats/KB'}"),
+            Text(f"{self.mempool_minfee:,.0f}")
+            )
+        self.tblMempoolInfo.add_row(
+            Text(f"{'Size in bytes'}"),
+            Text(f"{self.mempool_bytes/1000000:,.1f} MB")
+            )
+
+        if self.mempool_txs > 0 and mempool_check_ctr ==0:
+            PrevMempoolTxs = self.mempool_txs
+
+
+        return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo 
 
 
 __all__ = ('generateDataForTables'
            ,'dashboard'
 )
-
 
 
 
