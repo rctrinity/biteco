@@ -3,10 +3,10 @@
  Inspired by Clark Moody's online dashboard at https://bitcoin.clarkmoody.com/dashboard/   
  This python written module should replace bitcoin-cli internal getinfo if you are running a node full-time.   
 
- Version 0.2.0 released
- - Added Mempool Information
- - Split the table height in half to create 2 columns of tables
-
+ Version 0.2.2 released
+ - Added green / red value changes to all tables
+ - Added Total Fee value in usd. 
+ 
 ## **Requirements**:   
 
 Must be running your own Bitcoin node. :-)
