@@ -9,7 +9,7 @@ from queue import Queue
 
 # Package Info
 VERSION = 101
-SUB_VERSION = 'v0.2.1'
+SUB_VERSION = 'v0.2.2'
 SUB_SUB_VERSION = 'Stable'
 PACKAGE_NAME = 'Bitcoin Economics'
 COPYRIGHT = '© Farley'
@@ -34,10 +34,6 @@ OUNCES_IN_METRIC_TON = 32150.75
 GOLD_SUPPLY_METRIC_TON = 208874
 GOLD_OZ_ABOVE_GROUND = OUNCES_IN_METRIC_TON * GOLD_SUPPLY_METRIC_TON
 
-PrevBTCPrice = None
-PrevGLDPrice = None
-PrevBlockHeight = None
-PrevMempoolTxs = None
 
 # Initialize queue to use as a buffer bewtween dashboard and RPC calls
 q = Queue(maxsize = 3)
@@ -65,15 +61,14 @@ class GetAssetPrices(object):
             return None
     
     def getGLDUSD(self) -> float:
-        global PrevGLDPrice
         self = self._call(self.GoldForexURL)
         if self != None:
             for i in self:
                 if i['topo']['platform'] == 'AT':
                     for j in i['spreadProfilePrices']:
                         if j['spreadProfile'] == 'standard':
-                            if float(j['ask']) > 0:
-                                PrevGLDPrice = j['ask']
+                            #if float(j['ask']) > 0:
+                            #    PrevGLDPrice = j['ask']
                             return float(j['ask'])
         else:
             return None
@@ -124,11 +119,7 @@ __all__ = ('GetAssetPrices'
            ,'TRILLION'
            ,'CONVERT_TO_SATS'
            ,'GOLD_OZ_ABOVE_GROUND'
-           ,'PrevBTCPrice'
-           ,'PrevGLDPrice'
-           ,'PrevBlockHeight'
            ,'q'
-           ,'PrevMempoolTxs'
 )
 
 
