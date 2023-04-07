@@ -12,7 +12,7 @@ import math
 from typing import Tuple
 import biteco.util
 from biteco import __version__
-from biteco.util import GetAssetPrices, PrevBTCPrice, PrevMempoolTxs, blockSubsidy, PrevBlockHeight, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
+from biteco.util import GetAssetPrices, blockSubsidy, HALVING_BLOCKS, GIGABIT, GENESIS_REWARD, COIN, PACKAGE_NAME, EXAHASH, \
 COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION, q
 
 # Dashboard attributes
@@ -24,7 +24,8 @@ tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
 tblwidth = 45
-#mempool_check_ctr = 3
+
+PreviousSelf = None
 
 def addToQueue():
     global q
@@ -49,6 +50,16 @@ def addToQueue():
             
         except:
             pass
+
+# Determine value color based on if changes from previous. 
+def ValueColor(current, previous):
+    if current > previous:
+        return 'dim bold green'
+    elif current < previous:
+        return 'dim bold red'
+    else:
+        return 'bright_white'
+
 
 
 class generateDataForTables(object):
@@ -110,13 +121,11 @@ class generateDataForTables(object):
                  mempool_minfee = 0,
                  mempool_bytes = 0,
                  proxy_error = False): 
-        global PrevBlockHeight, PrevBTCPrice, PrevGLDPrice, mempool_check_ctr
+        global PreviousSelf
         self.proxy_error = proxy_error
         self.proxy=proxy
         if self.proxy == None:
             self.proxy=rpc.Proxy()
-        
-        getAssetPrices = GetAssetPrices()
         
         try:    
             self.nTargetTimespan = 14 * 24 * 60 * 60                     
@@ -124,7 +133,9 @@ class generateDataForTables(object):
             self.nSecsHour = 60 * 60                                     
             self.nBlocksHour = (self.nSecsHour / self.nTargetSpacing)              
             self.nInterval = self.nTargetTimespan / self.nTargetSpacing
-        
+            
+            getAssetPrices = GetAssetPrices()
+            
             # Proxy calls
             self.bestBlockHash = self.proxy.getbestblockhash()
             self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
@@ -153,11 +164,10 @@ class generateDataForTables(object):
         
             self.BTCPrice = getAssetPrices.Bitcoin_P
             if self.BTCPrice == None:
-                self.BTCPrice = max(PrevBTCPrice, 0)     # Work on this and Gold to show last good known price if waiting on server
-            self.GLDPrice = getAssetPrices.getGLDUSD()
+                self.BTCPrice = max(PreviousSelf.BTCPrice, 0)     # Work on this and Gold to show last good known price if waiting on server
             self.GLDPrice = getAssetPrices.Gold_P
             if self.GLDPrice == None:
-                self.GLDPrice = max(PrevGLDPrice, 0)
+                self.GLDPrice = max(PreviousSelf.GLDPrice, 0)
             try:
                 self.BTCPricedInGold = self.BTCPrice / self.GLDPrice
             except:
@@ -172,8 +182,6 @@ class generateDataForTables(object):
             self.txCount = chainTxStats['window_tx_count']         
             self.chainSize = getBlockChainInfo['size_on_disk'] / GIGABIT
             self.MAX_HEIGHT = getBlockChainInfo['blocks']
-            if PrevBlockHeight == None:
-                PrevBlockHeight = self.MAX_HEIGHT
             self.chainwork = math.log2(int(getBlockChainInfo['chainwork'], 16))
             self.verification = getBlockChainInfo['verificationprogress'] * 100        
             self.diffEpoch = 1+(self.MAX_HEIGHT // self.nInterval)
@@ -328,7 +336,7 @@ class dashboard(object):
 
     
     def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table, Table]:
-        global PrevBTCPrice, PrevBlockHeight, q, PrevMempoolTxs, mempool_check_ctr
+        global q, PreviousSelf
         
         if not q.empty():
             self = q.get()   # Grab from our queue, first in, first out method
@@ -337,43 +345,26 @@ class dashboard(object):
                 addToQueue()   
             self = q.get()
     
-        if PrevBTCPrice == None:
-            PrevBTCPrice = self.BTCPrice      
+        if PreviousSelf == None:
+            PreviousSelf = self      
 
         #Market
         self.tblMarket = Table(title_justify='left', title=' Market', show_header=False, width = tblwidth, show_footer=False, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
         self.tblMarket.add_column("", style=colDescStyle)
         self.tblMarket.add_column("", justify='right', style=colValStyle)
-        if int(round(self.BTCPrice)) > int(round(PrevBTCPrice)):
-            self.tblMarket.add_row(
+        
+        self.tblMarket.add_row(
             Text(f"{'Price'}"),
-            Text(f"${self.BTCPrice:,.0f}", style='dim bold green')
-            )
-        elif int(round(self.BTCPrice)) < int(round(PrevBTCPrice)):
-            self.tblMarket.add_row(
-            Text(f"{'Price'}"),
-            Text(f"${self.BTCPrice:,.0f}", style='dim bold red')  
-            )
-        else:
-            self.tblMarket.add_row(
-            Text(f"{'Price'}"),
-            Text(f"${self.BTCPrice:,.0f}", style=colValStyle)
-            )
-            
-        if float(self.BTCPrice) > 0:
-            PrevBTCPrice = self.BTCPrice
-    
-        if float(self.BTCPrice) > 0:
-            PrevBTCPrice = self.BTCPrice
-
-    
+            Text(f"${self.BTCPrice:,.0f}", style=ValueColor(round(self.BTCPrice), round(PreviousSelf.BTCPrice)))
+        )
+                    
         self.tblMarket.add_row(
             Text(f"{'Sats per Dollar'}"),
-            Text(f"{self.satusd:,.0f}"),
+            Text(f"{self.satusd:,.0f}", style=ValueColor(round(self.satusd), round(PreviousSelf.satusd))),
         )
         self.tblMarket.add_row(
             Text(f"{'Market Capitalization'}"),
-            Text(f"${self.MarketCap:.1f}B")
+            Text(f"${self.MarketCap:.1f}B", style=ValueColor(round(self.MarketCap), round(PreviousSelf.MarketCap)))
         )
     
         #Gold
@@ -382,11 +373,11 @@ class dashboard(object):
         self.tblGold.add_column("", justify='right', style=colValStyle)
         self.tblGold.add_row(
             Text(f"{'Bitcoin priced in Gold'}"),
-            Text(f"{self.BTCPricedInGold:.1f} oz"),
+            Text(f"{self.BTCPricedInGold:.1f} oz", style=ValueColor(self.BTCPricedInGold, PreviousSelf.BTCPricedInGold)),
         )
         self.tblGold.add_row(
             Text(f"{'Bitcoin vs. Gold Market Cap'}"),
-            Text(f"{self.BTCvsGOLDMarketCap:.2f}%")
+            Text(f"{self.BTCvsGOLDMarketCap:.2f}%", style=ValueColor(round(self.BTCvsGOLDMarketCap), round(PreviousSelf.BTCvsGOLDMarketCap)))
         )
     
         #Supply
@@ -421,24 +412,18 @@ class dashboard(object):
         )
         self.tblMining.add_row(
             Text(f"{'Subsidy value'}"),
-            Text(f"${self.blockSubsidyValue:,.0f}")
+            Text(f"${self.blockSubsidyValue:,.0f}", style=ValueColor(round(self.blockSubsidyValue), round(PreviousSelf.blockSubsidyValue)))
         )
     
         #Best Block Summary
         self.tblBestBlock = Table(title=' Best Block Summary', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
         self.tblBestBlock.add_column("", style=colDescStyle)
         self.tblBestBlock.add_column("", justify='right', style=colValStyle)
-        if self.MAX_HEIGHT > PrevBlockHeight:  
-            self.tblBestBlock.add_row(
-                Text(f"{'Block Height'}"),
-                Text(f"{self.MAX_HEIGHT:,.0f}", style='dim bold green'),
-                )
-        else:
-            self.tblBestBlock.add_row(
-               Text(f"{'Block Height'}"),
-               Text(f"{self.MAX_HEIGHT:,.0f}", style=colValStyle),
-               )
-        PrevBlockHeight = self.MAX_HEIGHT
+        self.tblBestBlock.add_row(
+            Text(f"{'Block Height'}"),
+            Text(f"{self.MAX_HEIGHT:,.0f}", style=ValueColor(self.MAX_HEIGHT, PreviousSelf.MAX_HEIGHT)),
+        )
+        
         self.tblBestBlock.add_row(
             Text(f"{'Chain size'}"),
             Text(f"{self.chainSize:.1f} GB"),
@@ -466,11 +451,11 @@ class dashboard(object):
         self.tblNetwork.add_column("", justify='right', style=colValStyle)
         self.tblNetwork.add_row(
             Text(f"{'Connections'}"),
-            Text(f"{self.Connections}"),
+            Text(f"{self.Connections}", style=ValueColor(self.Connections, PreviousSelf.Connections)),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Inbound'}"),
-            Text(f"{self.ConnectionsIn}"),
+            Text(f"{self.ConnectionsIn}", style=ValueColor(self.ConnectionsIn, PreviousSelf.ConnectionsIn)),
         )
     
         self.tblNetwork.add_row(
@@ -479,35 +464,35 @@ class dashboard(object):
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, Epoch'}"),
-            Text(f"{self.getNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.getNtwrkHashps:.1f} EH/s", style=ValueColor(self.getNtwrkHashps, PreviousSelf.getNtwrkHashps)),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 7-day'}"),
-            Text(f"{self.get7DNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get7DNtwrkHashps:.1f} EH/s", style=ValueColor(self.get7DNtwrkHashps, PreviousSelf.get7DNtwrkHashps)),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 4 weeks'}"),
-            Text(f"{self.get4WNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get4WNtwrkHashps:.1f} EH/s", style=ValueColor(self.get4WNtwrkHashps, PreviousSelf.get4WNtwrkHashps)),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, 1-day'}"),
-            Text(f"{self.get1DNtwrkHashps:.1f} EH/s"),
+            Text(f"{self.get1DNtwrkHashps:.1f} EH/s", style=ValueColor(self.get1DNtwrkHashps, PreviousSelf.get1DNtwrkHashps)),
         )
         self.tblNetwork.add_row(
             Text(f"{'Chain Work'}"),
-            Text(f"{self.chainwork:.1f} bits"),
+            Text(f"{self.chainwork:.1f} bits", style=ValueColor(round(self.chainwork,1), round(PreviousSelf.chainwork,1))),
         )
         self.tblNetwork.add_row(
             Text(f"{'Total Transactions'}"),
-            Text(f"{self.totalTXs:,.0f}"),
+            Text(f"{self.totalTXs:,.0f}", style=ValueColor(self.totalTXs, PreviousSelf.totalTXs)),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Rate, 30 Days'}"),
-            Text(f"{self.txRatePerSec:.1f} tx/s"),
+            Text(f"{self.txRatePerSec:.1f} tx/s", style=ValueColor(self.txRatePerSec, PreviousSelf.txRatePerSec)),
         )
         self.tblNetwork.add_row(
             Text(f"{'  Count, 30 Days'}"),
-            Text(f"{self.txCount:,.0f}")
+            Text(f"{self.txCount:,.0f}", style=ValueColor(self.txCount, PreviousSelf.txCount))
         )
     
         #Metrics / Events
@@ -517,7 +502,7 @@ class dashboard(object):
         self.tblMetricEvents.add_column("", justify='right', style=colValStyle)
         self.tblMetricEvents.add_row(
             Text(f"{'Difficulty Epoch'}"),
-            Text(f"{self.diffEpoch:.0f}"),
+            Text(f"{self.diffEpoch:.0f}", style=ValueColor(self.diffEpoch, PreviousSelf.diffEpoch)),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Block time, Prev Epoch'}"),
@@ -525,11 +510,11 @@ class dashboard(object):
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Block time, Diff. Epoch'}"),
-            Text(f"{self.avgEpochBlockTime}"),
+            Text(f"{self.avgEpochBlockTime}", style=ValueColor(self.avgEpochBlockTime, PreviousSelf.avgEpochBlockTime)),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Blocks to Retarget'}"),
-            Text(f"{self.epochBlocksRemain:,.0f}"),
+            Text(f"{self.epochBlocksRemain:,.0f}", style=ValueColor(self.epochBlocksRemain, PreviousSelf.epochBlocksRemain)),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Retarget Date'}"),
@@ -537,7 +522,7 @@ class dashboard(object):
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Estimated Change'}"),
-            Text(f"{self.estDiffChange:.01f}%"), 
+            Text(f"{self.estDiffChange:.01f}%", style=ValueColor(round(self.estDiffChange,1), round(PreviousSelf.estDiffChange,1))), 
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Retarget in nBits'}"),
@@ -545,7 +530,7 @@ class dashboard(object):
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Blocks to Halving'}"),
-            Text(f"{self.nBlocksToHalving:,.0f}"),
+            Text(f"{self.nBlocksToHalving:,.0f}", style=ValueColor(self.nBlocksToHalving, PreviousSelf.nBlocksToHalving)),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Estimate Halving on'}"),
@@ -555,46 +540,36 @@ class dashboard(object):
             Text(f"{'  Subsidy Epoch'}"),
             Text(f"{self.subsidyEpoch}")  
         )
-
-        if PrevMempoolTxs == None:
-            PrevMempoolTxs = self.mempool_txs      
         
         #MempoolInfo
         self.tblMempoolInfo = Table(title=' Mempool Info', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, 
                                 highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle) 
         self.tblMempoolInfo.add_column("", style=colDescStyle)
         self.tblMempoolInfo.add_column("", justify='right', style=colValStyle)
-        if self.mempool_txs > PrevMempoolTxs:
-            self.tblMempoolInfo.add_row(
-                Text(f"{'Transactions'}"),
-                Text(f"{self.mempool_txs:,.0f}", style='dim bold green'),
-            )
-        elif self.mempool_txs < PrevMempoolTxs:
-                self.tblMempoolInfo.add_row(
-                Text(f"{'Transactions'}"),
-                Text(f"{self.mempool_txs:,.0f}", style='dim bold red'),
-            )
-        else:
-            self.tblMempoolInfo.add_row(
-                Text(f"{'Transactions'}"),
-                Text(f"{self.mempool_txs:,.0f}", style=colValStyle),
-            )
+        self.tblMempoolInfo.add_row(
+            Text(f"{'Transactions'}"),
+            Text(f"{self.mempool_txs:,.0f}", style=ValueColor(self.mempool_txs, PreviousSelf.mempool_txs)),
+        )
         
         self.tblMempoolInfo.add_row(
             Text(f"{'Total Fee'}"),
-            Text(f"{self.total_fee:.2f} BTC"),
+            Text(f"{self.total_fee:.2f} BTC", style=ValueColor(round(self.total_fee,2), round(PreviousSelf.total_fee,2))),
             )
         self.tblMempoolInfo.add_row(
+            Text(f"{'Total Fee value'}"),
+            Text(f"${self.total_fee*self.BTCPrice:,.0f}", style=ValueColor(round((self.total_fee*self.BTCPrice),0), round((PreviousSelf.total_fee*PreviousSelf.BTCPrice),0))),
+            )
+
+        self.tblMempoolInfo.add_row(
             Text(f"{'Minimum Fee, sats/KB'}"),
-            Text(f"{self.mempool_minfee:,.0f}")
+            Text(f"{self.mempool_minfee:,.0f}", style=ValueColor(self.mempool_minfee, PreviousSelf.mempool_minfee))
             )
         self.tblMempoolInfo.add_row(
             Text(f"{'Size in bytes'}"),
-            Text(f"{self.mempool_bytes/1000000:,.1f} MB")
+            Text(f"{self.mempool_bytes/1000000:,.1f} MB", style=ValueColor(round((self.mempool_bytes/1000000),1), round((PreviousSelf.mempool_bytes/1000000),1)))
             )
 
-        if self.mempool_txs > 0:
-            PrevMempoolTxs = self.mempool_txs
+        PreviousSelf = self
 
 
         return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo 
