@@ -53,12 +53,13 @@ def addToQueue():
 
 # Determine value color based on if changes from previous. 
 def ValueColor(current, previous):
+    global colValStyle 
     if current > previous:
         return 'dim bold green'
     elif current < previous:
         return 'dim bold red'
     else:
-        return 'bright_white'
+        return colValStyle 
 
 
 
