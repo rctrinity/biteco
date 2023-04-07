@@ -314,7 +314,7 @@ class dashboard(object):
         self.layout['right']["bestblock"].size = 9
         self.layout['right']["network"].size = 14
         self.layout['left']["metricevents"].size = 17
-        self.layout['right']["mempoolinfo"].size = 7
+        self.layout['right']["mempoolinfo"].size = 8
         
         r = self.updateLayout()        
         return r
