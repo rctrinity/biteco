@@ -9,7 +9,7 @@ from queue import Queue
 
 # Package Info
 VERSION = 101
-SUB_VERSION = 'v0.2.2'
+SUB_VERSION = 'v0.2.3'
 SUB_SUB_VERSION = 'Stable'
 PACKAGE_NAME = 'Bitcoin Economics'
 COPYRIGHT = '© Farley'
@@ -67,8 +67,6 @@ class GetAssetPrices(object):
                 if i['topo']['platform'] == 'AT':
                     for j in i['spreadProfilePrices']:
                         if j['spreadProfile'] == 'standard':
-                            #if float(j['ask']) > 0:
-                            #    PrevGLDPrice = j['ask']
                             return float(j['ask'])
         else:
             return None
