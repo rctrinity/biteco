@@ -34,6 +34,7 @@ Rich library  https://github.com/Textualize/rich
  
  Below is a screenshot of the dashboard.   
  
- ![Screenshot from 2023-04-02 21-14-07](https://user-images.githubusercontent.com/103879453/229398515-dfbd18b2-4572-4ea7-895c-471906a6d785.png)
+ ![Screenshot from 2023-04-08 11-08-57](https://user-images.githubusercontent.com/103879453/230731538-07180c2c-dcbd-4764-90a6-2cf7c2546714.png)
+
 
 
