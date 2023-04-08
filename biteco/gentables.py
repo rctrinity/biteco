@@ -62,7 +62,6 @@ def ValueColor(current, previous):
         return colValStyle 
 
 
-
 class generateDataForTables(object):
     def __new__(cls, *args, **kwargs):
         return super().__new__(cls)
@@ -269,6 +268,7 @@ class generateDataForTables(object):
         secsToAdd = (self.nBlocksToHalving / self.nBlocksHour) * self.nSecsHour
         self = datetime.datetime.fromtimestamp(self.bestBlockTimeUnix + secsToAdd).strftime('%B %d, %Y')
         return self
+
         
 class dashboard(object):
     def __new__(cls, *args, **kwargs):
@@ -365,7 +365,7 @@ class dashboard(object):
         )
         self.tblMarket.add_row(
             Text(f"{'Market Capitalization'}"),
-            Text(f"${self.MarketCap:.1f}B", style=ValueColor(round(self.MarketCap), round(PreviousSelf.MarketCap)))
+            Text(f"${self.MarketCap:.1f}B", style=ValueColor(round(self.MarketCap,1), round(PreviousSelf.MarketCap,1)))
         )
     
         #Gold
@@ -374,11 +374,11 @@ class dashboard(object):
         self.tblGold.add_column("", justify='right', style=colValStyle)
         self.tblGold.add_row(
             Text(f"{'Bitcoin priced in Gold'}"),
-            Text(f"{self.BTCPricedInGold:.1f} oz", style=ValueColor(self.BTCPricedInGold, PreviousSelf.BTCPricedInGold)),
+            Text(f"{self.BTCPricedInGold:.1f} oz", style=ValueColor(round(self.BTCPricedInGold,1), round(PreviousSelf.BTCPricedInGold,1))),
         )
         self.tblGold.add_row(
             Text(f"{'Bitcoin vs. Gold Market Cap'}"),
-            Text(f"{self.BTCvsGOLDMarketCap:.2f}%", style=ValueColor(round(self.BTCvsGOLDMarketCap), round(PreviousSelf.BTCvsGOLDMarketCap)))
+            Text(f"{self.BTCvsGOLDMarketCap:.2f}%", style=ValueColor(round(self.BTCvsGOLDMarketCap,2), round(PreviousSelf.BTCvsGOLDMarketCap,2)))
         )
     
         #Supply
@@ -387,20 +387,20 @@ class dashboard(object):
         self.tblSupply.add_column("", justify='right', style=colValStyle)
         self.tblSupply.add_row(
             Text(f"{'Money Supply'}"),
-            Text(f"{self.coinsMined:,.2f}"),
+            Text(f"{self.coinsMined:,.2f}", style=ValueColor(round(self.coinsMined,2), round(PreviousSelf.coinsMined,2))),
         )
         self.tblSupply.add_row(
             Text(f"{'Percentage Issued'}"),
-            Text(f"{self.PctIssued:.2f}%"),
+            Text(f"{self.PctIssued:.2f}%", style=ValueColor(round(self.PctIssued,2), round(PreviousSelf.PctIssued,2))),
         )
         self.tblSupply.add_row(
             Text(f"{'Unspendable'}"),
-            Text(f"{self.UNSPENDABLE:.2f}")
+            Text(f"{self.UNSPENDABLE:.2f}", style=ValueColor(round(self.UNSPENDABLE,2), round(PreviousSelf.UNSPENDABLE,2)))
    
         )
         self.tblSupply.add_row(
             Text(f"{'Issuance Remaining'}"),
-            Text(f"{self.IssuanceRemaining:,.2f}"),
+            Text(f"{self.IssuanceRemaining:,.2f}", style=ValueColor(round(self.IssuanceRemaining,2), round(PreviousSelf.IssuanceRemaining,2))),
         )
     
         # Mining Economics
@@ -409,7 +409,7 @@ class dashboard(object):
         self.tblMining.add_column("", justify='right', style=colValStyle)
         self.tblMining.add_row(
             Text(f"{'Block Subsidy'}"),
-            Text(f"{self.BlockSubsidy:.2f} BTC"),
+            Text(f"{self.BlockSubsidy:.2f} BTC", style=ValueColor(round(self.BlockSubsidy,2), round(PreviousSelf.BlockSubsidy,2))),
         )
         self.tblMining.add_row(
             Text(f"{'Subsidy value'}"),
@@ -427,7 +427,7 @@ class dashboard(object):
         
         self.tblBestBlock.add_row(
             Text(f"{'Chain size'}"),
-            Text(f"{self.chainSize:.1f} GB"),
+            Text(f"{self.chainSize:.1f} GB", style=ValueColor(round(self.chainSize,1), round(PreviousSelf.chainSize,1))),
         )
         self.tblBestBlock.add_row(
             Text(f"{'nNonce'}"),
@@ -435,11 +435,11 @@ class dashboard(object):
         )
         self.tblBestBlock.add_row(
             Text(f"{'Difficulty'}"),
-            Text(f"{self.difficulty:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}"), 
+            Text(f"{self.difficulty:.1f}×10\N{SUPERSCRIPT ONE}\N{SUPERSCRIPT TWO}", style=ValueColor(round(self.difficulty,1), round(PreviousSelf.difficulty,1))), 
         )
         self.tblBestBlock.add_row(
             Text(f"{'Target in nBits'}"),
-            Text(f"{self.targetBits}"),
+            Text(f"{self.targetBits}", style=ValueColor(self.targetBits, PreviousSelf.targetBits)),
         )
         self.tblBestBlock.add_row(
             Text(f"{'Time'}"),
@@ -461,7 +461,7 @@ class dashboard(object):
     
         self.tblNetwork.add_row(
             Text(f"{'Verification Progress'}"),
-            Text(f"{self.verification:,.04f}%"),
+            Text(f"{self.verification:,.04f}%", style=ValueColor(round(self.verification,4), round(PreviousSelf.verification,4))),
         )
         self.tblNetwork.add_row(
             Text(f"{'Hash Rate, Epoch'}"),
@@ -527,7 +527,7 @@ class dashboard(object):
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Retarget in nBits'}"),
-            Text(f"{self.bnNew:.0f}"),
+            Text(f"{self.bnNew:.0f}", style=ValueColor(round(self.bnNew), round(PreviousSelf.bnNew))),
         )
         self.tblMetricEvents.add_row(
             Text(f"{'Blocks to Halving'}"),
@@ -539,7 +539,7 @@ class dashboard(object):
         )
         self.tblMetricEvents.add_row(
             Text(f"{'  Subsidy Epoch'}"),
-            Text(f"{self.subsidyEpoch}")  
+            Text(f"{self.subsidyEpoch}", style=ValueColor(self.subsidyEpoch, PreviousSelf.subsidyEpoch))  
         )
         
         #MempoolInfo
