@@ -3,7 +3,9 @@
  Inspired by Clark Moody's online dashboard at https://bitcoin.clarkmoody.com/dashboard/   
  This python written module should replace bitcoin-cli internal getinfo if you are running a node full-time.   
 
- Version 0.2.3 released
+ Version 0.2.4 released
+ - Added Blocks to Clear and Percent RBF to Mempool Info
+ - Code Cleanup
  
  
 ## **Requirements**:   
@@ -34,7 +36,7 @@ Rich library  https://github.com/Textualize/rich
  
  Below is a screenshot of the dashboard.   
  
- ![Screenshot from 2023-04-08 11-08-57](https://user-images.githubusercontent.com/103879453/230731538-07180c2c-dcbd-4764-90a6-2cf7c2546714.png)
+![Screenshot 2023-04-09 at 10 20 01 PM](https://user-images.githubusercontent.com/103879453/230818929-328d8657-469c-45b9-9a04-dd85d6091d72.png)
 
 
 
