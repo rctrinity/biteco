@@ -19,7 +19,7 @@ COPYRIGHT, TRILLION, CONVERT_TO_SATS, GOLD_OZ_ABOVE_GROUND, MAX_SUPPLY, BILLION,
 panelBox = box.SQUARE
 dashBox = box.HORIZONTALS
 tblBrdrStyle = 'dim bold deep_sky_blue1'
-pnlBrdrStyle = 'dim bold grey62'
+pnlBrdrStyle = 'white'
 tblTtlStyle = 'white'
 colDescStyle = 'bright_black'
 colValStyle = 'bright_white'
