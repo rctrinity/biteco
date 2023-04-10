@@ -1,6 +1,5 @@
 '''
  biteco.py
- v0.2.3 Stable
  Capture Market, Network, Gold, Metrics, and upcoming Events (difficulty and halving)  
  Copyright (c) 2023 Farley
  ___             _       _  _ 
