@@ -14,7 +14,7 @@ Requires:
    python-bitcoinlib by Peter Todd ( https://github.com/petertodd/python-bitcoinlib )
      git clone https://github.com/petertodd/python-bitcoinlib.git
 
-This terminal dashboard was inspired by Clark Moody's Bitcoin dashboard: https://bitcoin.clark.moody/dashboard
+This terminal dashboard was inspired by Clark Moody's Bitcoin dashboard: https://bitcoin.clarkmoody.com/dashboard
 '''
 
 from rich.align import Align
