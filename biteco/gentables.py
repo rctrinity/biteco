@@ -579,7 +579,7 @@ class dashboard(object):
             )
         self.tblMempoolInfo.add_row(
             Text(f"{'Blocks to Clear'}"),
-            Text(f"{1+((self.mempool_bytes/1000000)//4):,.0f}", style=ValueColor(round((1+((self.mempool_bytes/1000000)//4)),0), round((1+((PreviousSelf.mempool_bytes/1000000)//4)),1)))
+            Text(f"{1+((self.mempool_bytes/1000000)//1):,.0f}", style=ValueColor(round((1+((self.mempool_bytes/1000000)//1)),0), round((1+((PreviousSelf.mempool_bytes/1000000)//1)),1)))
             )
         self.tblMempoolInfo.add_row(
             Text(f"{'Percent RBF'}"),
