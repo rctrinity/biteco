@@ -34,6 +34,7 @@ nBlocksHour = (nSecsHour / nTargetSpacing)
 nInterval = nTargetTimespan / nTargetSpacing
 
 PreviousSelf = None
+RBF_ENABLED = False
 
 def addToQueue():
     global q
@@ -146,14 +147,16 @@ class generateDataForTables(object):
             self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
             self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) << 1) / EXAHASH    
             self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) // 14) / EXAHASH 
+            
             mempoolinfo = self.proxy.call('getmempoolinfo')
-            #rawmempool = self.proxy.getrawmempool(verbose=True)
             self.pct_rbf = pct_rbf
-            #rbf = 0
-            #for i in rawmempool:
-            #    if rawmempool[i]['bip125-replaceable']:
-            #        rbf +=1
-            #self.pct_rbf = (rbf/len(rawmempool))*100
+            if RBF_ENABLED:
+                rawmempool = self.proxy.getrawmempool(verbose=True)
+                rbf = 0
+                for i in rawmempool:
+                    if rawmempool[i]['bip125-replaceable']:
+                        rbf +=1
+                self.pct_rbf = (rbf/len(rawmempool))*100
             
             self.Connections = getNetworkInfo['connections'] 
             self.ConnectionsIn = getNetworkInfo['connections_in']
@@ -581,11 +584,16 @@ class dashboard(object):
             Text(f"{'Blocks to Clear'}"),
             Text(f"{1+((self.mempool_bytes/1000000)//1):,.0f}", style=ValueColor(round((1+((self.mempool_bytes/1000000)//1)),0), round((1+((PreviousSelf.mempool_bytes/1000000)//1)),1)))
             )
-        self.tblMempoolInfo.add_row(
-            Text(f"{'Percent RBF (Disabled)'}"),
+        if RBF_ENABLED:
+            self.tblMempoolInfo.add_row(
+                Text(f"{'Percent RBF (Disabled)'}"),
+                Text(f"{self.pct_rbf:.1f}%", style=ValueColor(round(self.pct_rbf,1), round(PreviousSelf.pct_rbf,1)))
+            )
+        else:
+            self.tblMempoolInfo.add_row(
+            Text(f"{'Percent RBF'}"),
             Text(f"{self.pct_rbf:.1f}%", style=ValueColor(round(self.pct_rbf,1), round(PreviousSelf.pct_rbf,1)))
             )
-    
 
         PreviousSelf = self
 
