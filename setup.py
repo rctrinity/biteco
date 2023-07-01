@@ -23,6 +23,7 @@ setup(
     packages=find_packages(),
     install_requires=['rich ==13.3.2',
                         'python-bitcoinlib == 0.12.0',
+                        'requests == 2.25.1',
                     ],
     entry_points={
         'console_scripts': ['biteco = biteco.biteco:main'],
