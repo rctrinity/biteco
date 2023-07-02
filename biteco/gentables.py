@@ -584,7 +584,7 @@ class dashboard(object):
             Text(f"{'Blocks to Clear'}"),
             Text(f"{1+((self.mempool_bytes/1000000)//1):,.0f}", style=ValueColor(round((1+((self.mempool_bytes/1000000)//1)),0), round((1+((PreviousSelf.mempool_bytes/1000000)//1)),1)))
             )
-        if RBF_ENABLED:
+        if not RBF_ENABLED:
             self.tblMempoolInfo.add_row(
                 Text(f"{'Percent RBF (Disabled)'}"),
                 Text(f"{self.pct_rbf:.1f}%", style=ValueColor(round(self.pct_rbf,1), round(PreviousSelf.pct_rbf,1)))
