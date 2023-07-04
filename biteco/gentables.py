@@ -125,6 +125,7 @@ class generateDataForTables(object):
                  mempool_minfee = 0,
                  mempool_bytes = 0,
                  pct_rbf = 0,
+                 srvr_uptime = 0,       # added
                  proxy_error = False): 
         
         global PreviousSelf
@@ -147,6 +148,15 @@ class generateDataForTables(object):
             self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
             self.get4WNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) << 1) / EXAHASH    
             self.get1DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) // 14) / EXAHASH 
+
+            #added server uptime to display in footer of Panel##
+            try:                
+                srvrUptime = self.proxy.call('uptime')
+            except:
+                srvrUptime = srvr_uptime
+
+            self.srvr_uptime = str(datetime.timedelta(seconds=(round(srvrUptime, 0)))).lstrip("0:")
+
             
             mempoolinfo = self.proxy.call('getmempoolinfo')
             self.pct_rbf = pct_rbf
@@ -333,7 +343,7 @@ class dashboard(object):
         
     def updateLayout(self) -> Panel:
         addToQueue()
-        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo = self.generateTable()
+        self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo, srvr_uptime = self.generateTable()
         
         self.layout["left"]["market"].update(self.tblMarket)
         self.layout["left"]["gold"].update(self.tblGold)
@@ -343,11 +353,12 @@ class dashboard(object):
         self.layout["right"]["network"].update(self.tblNetwork)
         self.layout["left"]["metricevents"].update(self.tblMetricEvents)
         self.layout["right"]["mempoolinfo"].update(self.tblMempoolInfo)
-        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle='v'+__version__, style=pnlBrdrStyle, width=96, height=40, padding=(1,1)) 
+        self.srvr_uptime = srvr_uptime
+        self = Panel(self.layout, title=PACKAGE_NAME, box=panelBox,  highlight=True, expand=False, subtitle='v'+__version__+' - Uptime: '+self.srvr_uptime, style=pnlBrdrStyle, width=96, height=40, padding=(1,1)) 
         return self 
 
     
-    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table, Table]:
+    def generateTable(self) -> tuple[Table, Table, Table, Table, Table, Table, Table, Table, str]:
         global q, PreviousSelf
     
         if not q.empty():
@@ -597,7 +608,7 @@ class dashboard(object):
 
         PreviousSelf = self
 
-        return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo 
+        return self.tblMarket, self.tblGold, self.tblSupply, self.tblMining, self.tblBestBlock, self.tblNetwork, self.tblMetricEvents, self.tblMempoolInfo, self.srvr_uptime 
 
 
 __all__ = ('generateDataForTables'
