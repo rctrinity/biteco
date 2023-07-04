@@ -29,13 +29,12 @@ installs any missing libraries.
  4. Optional only: Add rpcworkqueue=48 (default is 16) in your bitcoin.conf
  
  To stop biteco, touch ~/biteco/biteco/kill_biteco
- I created an alias on my machine to run the touch command. Biteco exists smoothly with this option, and is recommended approach.
+ I created an alias on my machine to run the touch command. Biteco exits smoothly with this option, and is recommended approach.
  
  - 'touch' kill_biteco in folder ~/biteco/biteco/ sends a kill trigger to the app. 
  - biteco will remove kill_biteco before exiting.
  
  The bitcoinlib rpc module uses your bitcoin.conf file to authenticate with your server. 
- I have made setting up biteco a bit easier with the setup module.
  
  
  Below is a screenshot of the dashboard.   
