@@ -3,10 +3,8 @@
  Inspired by Clark Moody's online dashboard at https://bitcoin.clarkmoody.com/dashboard/   
  This python written module should replace bitcoin-cli internal getinfo if you are running a node full-time.   
 
- Version 1.0.0 stable release
- - Tested on Ubuntu & Mac M1
- - Added server uptime to the footer of the panel
- - The 'Percent RBF' is disabled by default. Line 37 in ./biteco/gentables.py, you can change to True. Beware, can run sluggish if activity is high.
+ Version 1.1.0 stable release
+ - Added support for pruned nodes. gettxoutsetinfo RPC call really requires coinstatindex to be set. Full nodes should have coinstatindex set to 1.
  
  
 ## **Requirements**:   

@@ -125,7 +125,8 @@ class generateDataForTables(object):
                  mempool_minfee = 0,
                  mempool_bytes = 0,
                  pct_rbf = 0,
-                 srvr_uptime = 0,       # added
+                 srvr_uptime = 0,  
+                 pruned = False,
                  proxy_error = False): 
         
         global PreviousSelf
@@ -140,9 +141,14 @@ class generateDataForTables(object):
             # Proxy calls
             self.bestBlockHash = self.proxy.getbestblockhash()
             self.bestBlockHeader = self.proxy.getblockheader(self.bestBlockHash)
-            currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
             chainTxStats = self.proxy.call('getchaintxstats')  
             getBlockChainInfo = self.proxy.call('getblockchaininfo')
+            self.pruned = getBlockChainInfo['pruned']
+
+            # Adding support for pruned nodes. This really requires coinstatindex to be set, and is not possible if pruned is set.
+            if not self.pruned:
+                currentInfo = self.proxy.call('gettxoutsetinfo', 'muhash')
+
             getNetworkInfo = self.proxy.call('getnetworkinfo') 
             self.getNtwrkHashps = self.proxy.call('getnetworkhashps',-1)  / EXAHASH                    
             self.get7DNtwrkHashps = self.proxy.call('getnetworkhashps', int(nInterval) >> 1) / EXAHASH    
@@ -178,8 +184,14 @@ class generateDataForTables(object):
             self.difficulty = self.bestBlockHeader.difficulty/TRILLION
             self.targetBits = self.bestBlockHeader.nBits
             self.bestBlockTimeUnix = time.mktime(datetime.datetime.utcfromtimestamp(self.bestBlockHeader.nTime).timetuple())
-            self.coinsMined = float(currentInfo['total_amount'])
-            self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
+
+            if not self.pruned:
+                self.coinsMined = float(currentInfo['total_amount'])
+                self.UNSPENDABLE = float(currentInfo['total_unspendable_amount'])
+            else:
+                self.coinsMined = 0
+                self.UNSPENDABLE = 0
+
             self.BTCPrice = getAssetPrices.Bitcoin_P
             if self.BTCPrice == None:
                 self.BTCPrice = max(PreviousSelf.BTCPrice, 0)     # Work on this and Gold to show last good known price if waiting on server
@@ -404,7 +416,11 @@ class dashboard(object):
         )
 
         #Supply
-        self.tblSupply = Table(title=' Supply', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)  
+        if not self.pruned:    
+            self.tblSupply = Table(title=' Supply', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)
+        else:
+            self.tblSupply = Table(title=' Supply (Disabled: Pruned Node)', title_justify='left', show_header=False, show_footer=False, width = tblwidth, box=dashBox, highlight=True, border_style=tblBrdrStyle, style=tblTtlStyle)
+
         self.tblSupply.add_column("", style=colDescStyle)
         self.tblSupply.add_column("", justify='right', style=colValStyle)
         self.tblSupply.add_row(
